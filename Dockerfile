@@ -8,8 +8,6 @@ RUN apk update
 RUN apk upgrade
 RUN apk add --no-cache curl
 
-ENV YT_DLP_WEB_API_URI="http://localhost:41001"
-
 RUN curl -L https://unpkg.com/@pnpm/self-installer | node
 
 RUN pnpm install
