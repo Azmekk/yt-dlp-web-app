@@ -597,6 +597,7 @@ func runYtDlpCommand(video *database.Video, height int) error {
 	fmt.Println("Scanning yt-dlp output for progress:")
 	for scanner.Scan() {
 		line := scanner.Text()
+		fmt.Printf("%s\n\n\n", line)
 
 		var status utils.YtDlpDownloadInfo
 		if err := json.Unmarshal([]byte(line), &status); err != nil {
