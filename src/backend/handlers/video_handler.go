@@ -95,7 +95,10 @@ func SaveVideoHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var videoDimensions *VideoDimensions = nil
+	var videoDimensions VideoDimensions = VideoDimensions{
+		Height: 0,
+		Width:  0,
+	}
 	if requestedResolution != "" {
 		foundDimensions, exists := resolutions[requestedResolution]
 
@@ -104,7 +107,7 @@ func SaveVideoHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		videoDimensions = &foundDimensions
+		videoDimensions = foundDimensions
 	}
 
 	existingVideo, err := database.CheckForExistingVideo(videoUrl)
@@ -143,7 +146,7 @@ func SaveVideoHandler(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	go createVideo(videoUrl, videoRecord.ID, videoRecord.FileName, videoDimensions)
+	go createVideo(videoUrl, videoRecord, videoDimensions)
 
 	response := convertVideoToVideoResponse(videoRecord)
 
@@ -180,13 +183,13 @@ func ListVideosHandler(w http.ResponseWriter, r *http.Request) {
 
 	search := query.Get("search")
 	offset := (page - 1) * take
+
+	videoCount, err := database.GetVideosCountWithFilters(orderBy, descending, search)
 	if err != nil {
 		utils.WriteJsonError(w, "Something went wrong when counting videos", http.StatusInternalServerError)
 		fmt.Println("Error when trying to count videos: ", err)
 		return
 	}
-
-	videoCount, err := database.GetVideosCountWithFilters(orderBy, descending, search)
 
 	if videoCount == 0 {
 		utils.WriteJsonResponse([]VideoResponse{}, w)
@@ -519,11 +522,9 @@ func GetStorageInfo(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJsonResponse(response, w)
 }
 
-func createVideo(videoUrl string, videoRecordId uint, videoName string, dimensions *VideoDimensions) {
-	videoRecord, err := database.GetVideoById(videoRecordId)
-	if err != nil {
-		database.DeleteVideoById(videoRecordId)
-		fmt.Println("Error when trying to find video record to attach created video to: ", err)
+func createVideo(videoUrl string, videoRecord *database.Video, dimensions VideoDimensions) {
+	if videoRecord == nil {
+		fmt.Println("Video record was nil")
 		return
 	}
 
@@ -532,30 +533,30 @@ func createVideo(videoUrl string, videoRecordId uint, videoName string, dimensio
 
 	fmt.Println("Attempting to download video: ", videoUrl)
 
-	err = runYtDlpCommand(videoRecord, dimensions.Height)
+	err := runYtDlpCommand(videoRecord, dimensions.Height)
 	if err != nil {
 		fmt.Println("Error when trying to download video: ", err)
-		database.DeleteVideoById(videoRecordId)
+		database.DeleteVideoById(videoRecord.ID)
 		return
 	}
 
-	fileInfo, err := os.Stat(filepath.Join(utils.DefaultDownloadDir, videoName))
+	fileInfo, err := os.Stat(filepath.Join(utils.DefaultDownloadDir, videoRecord.FileName))
 	if err != nil {
-		fmt.Println(fmt.Sprintf("Error when trying to get video info for: %s", videoName), err)
-		database.DeleteVideoById(videoRecordId)
+		fmt.Println(fmt.Sprintf("Error when trying to get video info for: %s", videoRecord.FileName), err)
+		database.DeleteVideoById(videoRecord.ID)
 		return
 	}
 
-	thumbnailName := utils.DownloadAndCreateThumbnail(videoInfo.ThumbnailURL, videoName)
+	thumbnailName := utils.DownloadAndCreateThumbnail(videoInfo.ThumbnailURL, videoRecord.FileName)
 
 	if thumbnailName == "" {
-		thumbnailName = utils.CreateThumbnailFromFrame(filepath.Join(utils.DefaultDownloadDir, videoName))
+		thumbnailName = utils.CreateThumbnailFromFrame(filepath.Join(utils.DefaultDownloadDir, videoRecord.FileName))
 	}
 
-	err = database.MarkVideoDownloaded(videoRecord, videoName, thumbnailName, fileInfo.Size())
+	err = database.MarkVideoDownloaded(videoRecord, videoRecord.FileName, thumbnailName, fileInfo.Size())
 	if err != nil {
 		fmt.Println("Error when trying to update video info: ", err)
-		database.DeleteVideoById(videoRecordId)
+		database.DeleteVideoById(videoRecord.ID)
 	}
 }
 
