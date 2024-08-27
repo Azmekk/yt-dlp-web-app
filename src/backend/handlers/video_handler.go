@@ -594,6 +594,7 @@ func runYtDlpCommand(video *database.Video, height int) error {
 
 	lastValidPercentage := 0
 	lastUpdatedTime := time.Now()
+	fmt.Println("Scanning yt-dlp output for progress:")
 	for scanner.Scan() {
 		line := scanner.Text()
 
@@ -611,6 +612,7 @@ func runYtDlpCommand(video *database.Video, height int) error {
 			continue
 		}
 
+		fmt.Printf("Progress: %d%%\n", newPercent)
 		lastValidPercentage = newPercent
 
 		currentTime := time.Now()
