@@ -44,7 +44,9 @@ It features both light and dark themes and is designed with a mobile-friendly la
 If don't want to use docker, you can do the following: 
 1. Download the application **for your platform** as a zip file from the [latest release](https://github.com/Azmekk/yt-dlp-web-app/releases/latest) 
 2. Extract the zip using something like [7zip](https://www.7-zip.org/).
-3. Run the executable called `backend.exe` to access the UI at http://localhost:41001
+3. If you do not have YT-DLP or FFMPEG on path or don't know what they are, you will need to download YT-DLP from [here](https://github.com/yt-dlp/yt-dlp/releases) and FFMPEG from [here](https://github.com/yt-dlp/FFmpeg-Builds).
+4. Unzip both of these and paste the executables in the same folder as `backend.exe`
+4. Run the executable called `backend.exe` to access the UI at http://localhost:41001
 
 By default, the app will create necessary files in the same directory as the executable. To customize their locations, edit the .env file in the executable's directory. Here’s a breakdown:
 
