@@ -571,10 +571,10 @@ func createVideo(videoUrl string, videoRecord *database.Video, dimensions VideoD
 	thumbnailName := utils.DownloadAndCreateThumbnail(videoInfo.ThumbnailURL, videoRecord.FileName)
 
 	if thumbnailName == "" {
-		thumbnailName = utils.CreateThumbnailFromFrame(filepath.Join(utils.DefaultDownloadDir, videoRecord.FileName))
+		thumbnailName = utils.CreateThumbnailFromFrame(videoRecord.FileName)
 	}
 
-	err = database.MarkVideoDownloaded(videoRecord, videoRecord.FileName, thumbnailName, fileInfo.Size())
+	err = database.SaveDownloadedVideo(videoRecord, videoRecord.FileName, thumbnailName, fileInfo.Size())
 	if err != nil {
 		fmt.Println("Error when trying to update video info: ", err)
 		deleteVideoInternal(videoRecord.ID)
@@ -608,41 +608,54 @@ func runYtDlpCommand(video *database.Video, height int) error {
 		return err
 	}
 
+	scanner := bufio.NewScanner(stdout)
+
 	if err := cmd.Start(); err != nil {
 		return err
 	}
-
-	scanner := bufio.NewScanner(stdout)
 
 	lastValidPercentage := 0
 	lastUpdatedTime := time.Now()
 	fmt.Println("Scanning yt-dlp output for progress:")
 	for scanner.Scan() {
 		line := scanner.Text()
+		//fmt.Println(line)
 
 		var status utils.YtDlpDownloadInfo
 		if err := json.Unmarshal([]byte(line), &status); err != nil {
+			fmt.Println("Failed to unmarshal json. Err: ", err)
 			continue
 		}
 
-		fmt.Printf("Downloaded Bytes: %d\nTotalBytes: %d\n", status.DownloadedBytes, status.TotalBytes)
-		if status.DownloadedBytes == 0 || status.TotalBytes == 0 || (status.DownloadedBytes >= status.TotalBytes) {
-			continue
+		percentStrReplacer := strings.NewReplacer("%", "", " ", "")
+		parsedPercentStr, err := strconv.ParseFloat(percentStrReplacer.Replace(status.PercentStr), 64)
+		if err != nil {
+			fmt.Println("Failed to parse percent from str: ", err)
 		}
 
-		floatPercent := (float64(status.DownloadedBytes) / float64(status.TotalBytes)) * 100
-		newPercent := int(math.Round(floatPercent))
-		fmt.Printf("Float Percent: %.2f\nRounded Percent: %d", floatPercent, newPercent)
+		if err == nil && int(math.Round(parsedPercentStr)) > lastValidPercentage {
+			lastValidPercentage = int(math.Round(parsedPercentStr))
+		} else {
+			fmt.Printf("Downloaded Bytes: %d\nTotalBytes: %d\n", status.DownloadedBytes, status.TotalBytes)
+			if status.DownloadedBytes == 0 || status.TotalBytes == 0 || (status.DownloadedBytes >= status.TotalBytes) {
+				continue
+			}
 
-		if newPercent <= video.DownloadPercent {
-			continue
+			floatPercent := (float64(status.DownloadedBytes) / float64(status.TotalBytes)) * 100
+			newPercent := int(math.Round(floatPercent))
+			fmt.Printf("Float Percent: %.2f\nRounded Percent: %d\n", floatPercent, newPercent)
+
+			if newPercent <= video.DownloadPercent {
+				continue
+			}
+			lastValidPercentage = newPercent
 		}
-		lastValidPercentage = newPercent
 
 		currentTime := time.Now()
 		elapsedTime := currentTime.Sub(lastUpdatedTime)
 
 		if (elapsedTime >= 1*time.Second || video.DownloadPercent == 0) && video.DownloadPercent < lastValidPercentage {
+			fmt.Printf("Writing %d percent progress to video.", lastValidPercentage)
 			lastUpdatedTime = currentTime
 			video.DownloadPercent = lastValidPercentage
 			database.DbConn.Save(video)

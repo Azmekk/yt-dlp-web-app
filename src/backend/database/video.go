@@ -68,7 +68,7 @@ func CreateVideo(url string, videoName string) (*Video, error) {
 	return &newVideo, nil
 }
 
-func MarkVideoDownloaded(video *Video, filename string, thumbnailName string, size int64) error {
+func SaveDownloadedVideo(video *Video, filename string, thumbnailName string, size int64) error {
 	video.FileName = filename
 	video.ThumnailName = thumbnailName
 	video.Size = size

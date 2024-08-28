@@ -143,7 +143,7 @@
 
 	onMount(async () => {
 		await updateVideoInfo();
-		interval = setInterval(checkVideosDownloadStatus, 2000);
+		interval = setInterval(checkVideosDownloadStatus, 1000);
 	});
 </script>
 

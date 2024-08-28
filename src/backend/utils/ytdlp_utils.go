@@ -10,27 +10,27 @@ import (
 )
 
 type YtDlpDownloadInfo struct {
-	Status                string  `json:"status"`
-	DownloadedBytes       int     `json:"downloaded_bytes"`
-	TotalBytes            int     `json:"total_bytes"`
-	FragmentIndex         int     `json:"fragment_index"`
-	FragmentCount         int     `json:"fragment_count"`
-	Filename              string  `json:"filename"`
-	Tmpfilename           string  `json:"tmpfilename"`
-	MaxProgress           int     `json:"max_progress"`
-	ProgressIdx           int     `json:"progress_idx"`
-	Elapsed               float64 `json:"elapsed"`
-	TotalBytesEstimate    float64 `json:"total_bytes_estimate"`
-	Speed                 int     `json:"speed"`
-	Eta                   string  `json:"eta"`
-	EtaStr                string  `json:"_eta_str"`
-	SpeedStr              string  `json:"_speed_str"`
-	PercentStr            string  `json:"_percent_str"`
-	TotalBytesStr         string  `json:"_total_bytes_str"`
-	TotalBytesEstimateStr string  `json:"_total_bytes_estimate_str"`
-	DownloadedBytesStr    string  `json:"_downloaded_bytes_str"`
-	ElapsedStr            string  `json:"_elapsed_str"`
-	DefaultTemplate       string  `json:"_default_template"`
+	//Status                string  `json:"status"`
+	DownloadedBytes int `json:"downloaded_bytes"`
+	TotalBytes      int `json:"total_bytes"`
+	//FragmentIndex         int     `json:"fragment_index"`
+	//FragmentCount         int     `json:"fragment_count"`
+	//Filename              string  `json:"filename"`
+	//Tmpfilename           string  `json:"tmpfilename"`
+	//MaxProgress           int     `json:"max_progress"`
+	//ProgressIdx           int     `json:"progress_idx"`
+	//Elapsed               float64 `json:"elapsed"`
+	//TotalBytesEstimate    float64 `json:"total_bytes_estimate"`
+	//Speed                 int     `json:"speed"`
+	//Eta                   int     `json:"eta"`
+	//EtaStr                string  `json:"_eta_str"`
+	//SpeedStr              string  `json:"_speed_str"`
+	PercentStr string `json:"_percent_str"`
+	//TotalBytesStr         string  `json:"_total_bytes_str"`
+	//TotalBytesEstimateStr string  `json:"_total_bytes_estimate_str"`
+	//DownloadedBytesStr    string  `json:"_downloaded_bytes_str"`
+	//ElapsedStr            string  `json:"_elapsed_str"`
+	//DefaultTemplate       string  `json:"_default_template"`
 }
 
 var DefaultYtDlpCommand string = "yt-dlp"
