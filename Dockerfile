@@ -36,4 +36,6 @@ RUN apk upgrade
 RUN apk add --no-cache ffmpeg
 RUN apk add --no-cache yt-dlp
 
+EXPOSE 41001
+
 CMD ["./backend"] 
