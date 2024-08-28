@@ -617,7 +617,6 @@ func runYtDlpCommand(video *database.Video, height int) error {
 	lastValidPercentage := 0
 	lastUpdatedTime := time.Now()
 	fmt.Println("Scanning yt-dlp output for progress:")
-
 	for scanner.Scan() {
 		line := scanner.Text()
 
@@ -654,6 +653,13 @@ func runYtDlpCommand(video *database.Video, height int) error {
 	}
 
 	video.DownloadPercent = 100
-	database.DbConn.Save(video)
+
+	result := database.DbConn.Save(video)
+	if result.Error != nil {
+		fmt.Println("Something went wrong when saving video: ", err)
+		return fmt.Errorf("something went wrong when saving video")
+	}
+
+	fmt.Println("Progress: 100%. Video Downloaded!")
 	return nil
 }
