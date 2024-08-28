@@ -26,4 +26,9 @@ if [ ! -d ./backend/bin/build/static ]; then
     mkdir -p ./backend/bin/build/static
 fi
 
+echo "Copying files..."
+
 cp -r ./frontend/build/* ./backend/bin/build/static/
+cp ./start.bat ./backend/bin/build/
+
+echo "Done!"

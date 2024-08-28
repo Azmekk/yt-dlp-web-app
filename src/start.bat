@@ -16,7 +16,7 @@ if EXIST "%ffmpeg_exe%" (
    powershell -Command "$ProgressPreference = 'SilentlyContinue'; Invoke-WebRequest -Uri '%ffmpeg_url%' -OutFile '%ffmpeg_zip%'"
 
     echo Unzipping FFmpeg...
-    powershell -Command "Expand-Archive -Path %ffmpeg_zip% -DestinationPath ."
+    powershell -Command "$ProgressPreference = 'SilentlyContinue'; Expand-Archive -Path %ffmpeg_zip% -DestinationPath ."
 
     echo Copying FFmpeg binaries to current directory...
     xcopy "%ffmpeg_dir%\bin\*" "%cd%\" /y
