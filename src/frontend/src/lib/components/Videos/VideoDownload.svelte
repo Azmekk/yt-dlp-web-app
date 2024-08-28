@@ -27,10 +27,6 @@
 		{
 			value: 'mp4',
 			label: 'mp4'
-		},
-		{
-			value: 'mp3',
-			label: 'mp3'
 		}
 	];
 
