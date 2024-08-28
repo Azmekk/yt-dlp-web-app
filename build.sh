@@ -4,10 +4,14 @@ export CGO_ENABLED=1
 
 echo "Building go backend..."
 cd ./src/backend
+
+go mod download
 go build -o ./bin/build/backend.exe
+
 if [ ! -f ./bin/build/.env ]; then
     touch ./bin/build/.env
 fi
+
 echo "Done!"
 
 echo "Building frontend..."
