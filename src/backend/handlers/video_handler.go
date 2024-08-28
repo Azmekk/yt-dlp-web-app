@@ -595,9 +595,9 @@ func runYtDlpCommand(video *database.Video, height int) error {
 	lastValidPercentage := 0
 	lastUpdatedTime := time.Now()
 	fmt.Println("Scanning yt-dlp output for progress:")
+
 	for scanner.Scan() {
 		line := scanner.Text()
-		fmt.Printf("%s\n\n\n", line)
 
 		var status utils.YtDlpDownloadInfo
 		if err := json.Unmarshal([]byte(line), &status); err != nil {
@@ -609,17 +609,18 @@ func runYtDlpCommand(video *database.Video, height int) error {
 		}
 
 		newPercent := int(math.Round((float64(status.DownloadedBytes) / float64(status.TotalBytes)) * 100))
+		fmt.Printf("Downloaded Bytes: %d\nTotalBytes: %d\nProgress: %d%%\n", status.DownloadedBytes, status.TotalBytes, newPercent)
+
 		if newPercent <= video.DownloadPercent {
 			continue
 		}
 
-		fmt.Printf("Progress: %d%%\n", newPercent)
 		lastValidPercentage = newPercent
 
 		currentTime := time.Now()
 		elapsedTime := currentTime.Sub(lastUpdatedTime)
 
-		if elapsedTime >= 1*time.Second && video.DownloadPercent < lastValidPercentage {
+		if (elapsedTime >= 1*time.Second || video.DownloadPercent == 0) && video.DownloadPercent < lastValidPercentage {
 			lastUpdatedTime = currentTime
 			video.DownloadPercent = lastValidPercentage
 			database.DbConn.Save(video)
