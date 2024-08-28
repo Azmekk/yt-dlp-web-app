@@ -183,6 +183,7 @@
 						options={formatOptions}
 						label="Media format"
 						labelPlacement="top"
+						clearable={false}
 					></SelectField>
 				</div>
 			</div>
