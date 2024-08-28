@@ -81,6 +81,10 @@ var resolutions = map[string]VideoDimensions{
 	"2160p": {Width: 3840, Height: 2160},
 }
 
+var supportedFormats = map[string]struct{}{
+	"mp4": {},
+}
+
 func SaveVideoHandler(w http.ResponseWriter, r *http.Request) {
 	query := r.URL.Query()
 	videoUrl := query.Get("video")
@@ -92,6 +96,12 @@ func SaveVideoHandler(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil || u.Scheme == "" || u.Host == "" {
 		utils.WriteJsonError(w, "Video param must be provided and be a valid url", http.StatusBadRequest)
+		return
+	}
+
+	_, formatSupported := supportedFormats[requestedFormat]
+	if !formatSupported {
+		utils.WriteJsonError(w, "Provided format not supported.", http.StatusBadRequest)
 		return
 	}
 

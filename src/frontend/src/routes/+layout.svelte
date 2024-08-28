@@ -98,7 +98,7 @@
 			currentUrl={$page.url}
 		/>
 
-		<button
+		<!--<button
 			on:click={(e) => e.preventDefault()}
 			class="hover:cursor-not-allowed opacity-50 hover:bg-primary w-full"
 		>
@@ -109,7 +109,7 @@
 				currentUrl={$page.url}
 				path="/"
 			/>
-		</button>
+		</button>-->
 
 		<div class="w-full border-t mt-5 p-5 border-slate-500 flex gap-2 text-white">
 			<Icon class="" data={mdiHarddisk} />
