@@ -625,17 +625,18 @@ func runYtDlpCommand(video *database.Video, height int) error {
 			continue
 		}
 
+		fmt.Printf("Downloaded Bytes: %d\nTotalBytes: %d\n", status.DownloadedBytes, status.TotalBytes)
 		if status.DownloadedBytes == 0 || status.TotalBytes == 0 || (status.DownloadedBytes >= status.TotalBytes) {
 			continue
 		}
 
-		newPercent := int(math.Round((float64(status.DownloadedBytes) / float64(status.TotalBytes)) * 100))
-		fmt.Printf("Downloaded Bytes: %d\nTotalBytes: %d\nProgress: %d%%\n", status.DownloadedBytes, status.TotalBytes, newPercent)
+		floatPercent := (float64(status.DownloadedBytes) / float64(status.TotalBytes)) * 100
+		newPercent := int(math.Round(floatPercent))
+		fmt.Printf("Float Percent: %.2f\nRounded Percent: %d", floatPercent, newPercent)
 
 		if newPercent <= video.DownloadPercent {
 			continue
 		}
-
 		lastValidPercentage = newPercent
 
 		currentTime := time.Now()
