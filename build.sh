@@ -26,5 +26,4 @@ if [ ! -d ./backend/bin/build/static ]; then
     mkdir -p ./backend/bin/build/static
 fi
 
-# Using rsync instead of robocopy as robocopy is a Windows-specific command
 cp -r ./frontend/build/* ./backend/bin/build/static/
