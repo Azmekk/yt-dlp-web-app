@@ -11,10 +11,9 @@ func HandleFuncWithMiddleware(pattern string, handler func(http.ResponseWriter, 
 
 func CorsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		returnOrigin := "http://localhost:5173"
 		origin := r.Header.Get("Origin")
 
-		returnOrigin = origin
+		returnOrigin := origin
 
 		w.Header().Set("Access-Control-Allow-Origin", returnOrigin)
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
