@@ -6,8 +6,8 @@
 		mdiChevronLeft,
 		mdiChevronRight
 	} from '@mdi/js';
-	import { Button, Menu, TextField } from 'svelte-ux';
 	import { createEventDispatcher } from 'svelte';
+	import { Button, Menu, TextField } from 'svelte-ux';
 
 	const dispatch = createEventDispatcher();
 

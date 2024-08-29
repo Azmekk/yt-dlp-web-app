@@ -8,22 +8,17 @@
 		renameVideo,
 		type ApiVideoResponse
 	} from '$lib/api_client';
-	import { formatDate, formatBytes } from '$lib/utils';
-	import { onMount } from 'svelte';
-	import { Button, Dialog, Field, Icon, Input, Progress } from 'svelte-ux';
+	import { formatBytes, formatDate } from '$lib/utils';
 	import {
-		mdiPencil,
-		mdiDownload,
-		mdiDelete,
-		mdiLoading,
-		mdiTrashCan,
 		mdiCancel,
 		mdiCheck,
-
-		mdiMusic
-
+		mdiDelete,
+		mdiDownload,
+		mdiPencil,
+		mdiTrashCan
 	} from '@mdi/js';
-	import { createEventDispatcher } from 'svelte';
+	import { createEventDispatcher, onMount } from 'svelte';
+	import { Button, Dialog, Field, Input, Progress, ProgressCircle } from 'svelte-ux';
 
 	const dispatch = createEventDispatcher();
 
@@ -102,9 +97,9 @@
 	{#if !video.downloaded}
 		<div
 			style="width: {videoWidth}px; height: {videoHeight}px;"
-			class="flex flex-colpt-10 justify-center items-center"
+			class="flex flex-col pt-10 justify-center items-center"
 		>
-			<Icon data={mdiLoading} class="animate-spin" size={'64px'} />
+			<ProgressCircle size={64} class="text-black dark:text-white" />
 			<h2 class="overflow-ellipsis overflow-hidden whitespace-nowrap text-xl font-bold mb-2">
 				Downloading: {video.downloadPercent}%
 			</h2>

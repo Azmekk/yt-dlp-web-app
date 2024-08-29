@@ -5,20 +5,18 @@
 		saveVideo,
 		type VideoDimensionsResponse
 	} from '$lib/api_client';
-	import { mdiDownload, mdiPlus, mdiCancel } from '@mdi/js';
+	import { getFormattedVideoName } from '$lib/utils';
+	import { mdiCancel, mdiDownload, mdiPlus } from '@mdi/js';
+	import { createEventDispatcher } from 'svelte';
 	import {
 		Button,
 		Dialog,
-		Icon,
-		Input,
-		MenuButton,
 		Field,
+		Input,
 		SelectField,
-		type MenuOption,
-		Switch
+		Switch,
+		type MenuOption
 	} from 'svelte-ux';
-	import { createEventDispatcher } from 'svelte';
-	import { getFormattedVideoName } from '$lib/utils';
 
 	const dispatch = createEventDispatcher();
 

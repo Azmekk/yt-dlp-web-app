@@ -1,30 +1,28 @@
 <script lang="ts">
+	import { mdiHarddisk, mdiMagnify, mdiTuneVariant } from '@mdi/js';
 	import {
 		AppBar,
 		AppLayout,
-		Card,
 		Button,
+		Dialog,
+		Field,
+		Icon,
+		Input,
 		NavItem,
-		Tooltip,
+		ProgressCircle,
+		Radio,
 		settings,
 		ThemeSelect,
-		Field,
-		Input,
-		Icon,
-		ProgressCircle,
-		Dialog,
-		Radio,
-		Switch
+		Tooltip
 	} from 'svelte-ux';
-	import { mdiCog, mdiTuneVariant, mdiFilterVariant, mdiHarddisk, mdiMagnify } from '@mdi/js';
 
 	import { page } from '$app/stores';
-	import '../app.postcss';
+	import { getUsedStorage, VideoOrderByParam } from '$lib/api_client';
+	import { orderByDescendingStore, orderByStore, videoSearchStore } from '$lib/Stores/FilterStores';
+	import { usedStorageStore } from '$lib/Stores/UsedStorageStore';
 	import { formatBytes } from '$lib/utils';
 	import { onMount } from 'svelte';
-	import { getUsedStorage, VideoOrderByParam } from '$lib/api_client';
-	import { usedStorageStore } from '$lib/Stores/UsedStorageStore';
-	import { orderByStore, videoSearchStore, orderByDescendingStore } from '$lib/Stores/FilterStores';
+	import '../app.postcss';
 
 	settings({
 		components: {

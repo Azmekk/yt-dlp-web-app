@@ -1,3 +1,8 @@
+let devUrl: undefined | string;
+if (process.env.NODE_ENV === 'development') {
+    devUrl = 'http://localhost:41001';
+}
+
 export type ApiVideoListResponse = {
     videos: ApiVideoResponse[];
     totalAmount: number
@@ -43,7 +48,7 @@ export enum VideoOrderByParam{
 
 export async function saveVideo(videoUrl: string, videoName: string, mediaFormat: string, height: number = 0): Promise<ApiVideoResponse | null> {
     let path = "/api/videos/save"
-    var url = new URL(path, window.location.href);
+    var url = new URL(path, devUrl ? devUrl : window.location.href);
     url.searchParams.append("video", videoUrl);
     url.searchParams.append("name", videoName);
     url.searchParams.append("format", mediaFormat);
@@ -71,7 +76,7 @@ export async function saveVideo(videoUrl: string, videoName: string, mediaFormat
 
 export async function getYoutubeName(videoUrl: string): Promise<TitleResponse | null> {
     let path = "/api/videos/getYoutubeName"
-    var url = new URL(path, window.location.href);
+    var url = new URL(path, devUrl ? devUrl : window.location.href);
     url.searchParams.append("video", videoUrl);
 
     const response = await fetchWithCors(url.toString());
@@ -89,7 +94,7 @@ export async function getYoutubeName(videoUrl: string): Promise<TitleResponse | 
 
 export async function fetchVideosJson(take: number, page: number, orderBy: VideoOrderByParam = 0, descending: boolean = true, search: string = "" ): Promise<ApiVideoListResponse | null> {
     let path = "/api/videos/list"
-    var url = new URL(path, window.location.href);
+    var url = new URL(path, devUrl ? devUrl : window.location.href);
     url.searchParams.append("take", take.toString());
     url.searchParams.append("page", page.toString());
     url.searchParams.append("orderBy", orderBy.toString());
@@ -108,7 +113,7 @@ export async function fetchVideosJson(take: number, page: number, orderBy: Video
 }
 export async function fetchVideoCount(): Promise<ApiVideoCountResponse | null> {
     let path = "/api/videos/getcount"
-    var url = new URL(path, window.location.href);
+    var url = new URL(path, devUrl ? devUrl : window.location.href);
     const response = await fetchWithCors(url.toString());
 
     if (!response.ok) {
@@ -122,7 +127,7 @@ export async function fetchVideoCount(): Promise<ApiVideoCountResponse | null> {
 
 export async function fetchVideoInfo(videoId: number): Promise<ApiVideoResponse | null> {
     let path = "/api/videos/getInfo"
-    var url = new URL(path, window.location.href);
+    var url = new URL(path, devUrl ? devUrl : window.location.href);
     url.searchParams.append("id", videoId.toString());
 
     const response = await fetchWithCors(url.toString());
@@ -138,7 +143,7 @@ export async function fetchVideoInfo(videoId: number): Promise<ApiVideoResponse 
 
 export async function deleteVideo(videoId: number) {
     let path = "/api/videos/delete"
-    var url = new URL(path, window.location.href);
+    var url = new URL(path, devUrl ? devUrl : window.location.href);
     url.searchParams.append("id", videoId.toString());
 
     const response = await fetchWithCors(url.toString());
@@ -150,7 +155,7 @@ export async function deleteVideo(videoId: number) {
 
 export async function renameVideo(videoId: number, newName: string) {
     let path = "/api/videos/rename"
-    var url = new URL(path, window.location.href);
+    var url = new URL(path, devUrl ? devUrl : window.location.href);
     url.searchParams.append("id", videoId.toString());
     url.searchParams.append("newName", newName);
 
@@ -163,7 +168,7 @@ export async function renameVideo(videoId: number, newName: string) {
 
 export async function getVideoDimensions(videoUrl: string): Promise<VideoDimensionsResponse> {
     let path = "/api/videos/getVideoDimensions"
-    var url = new URL(path, window.location.href);
+    var url = new URL(path, devUrl ? devUrl : window.location.href);
     url.searchParams.append("video", videoUrl);
 
     const response = await fetchWithCors(url.toString());
@@ -180,7 +185,7 @@ export async function getVideoDimensions(videoUrl: string): Promise<VideoDimensi
 
 export async function getUsedStorage(): Promise<DriveUsageResponse>{
     let path = "/api/videos/getStorageInfo"
-    var url = new URL(path, window.location.href);
+    var url = new URL(path, devUrl ? devUrl : window.location.href);
 
     const response = await fetchWithCors(url.toString());
 
@@ -195,7 +200,7 @@ export async function getUsedStorage(): Promise<DriveUsageResponse>{
 
 export function getDownloadVideoPath(videoId: number): string {
     let path = "/api/videos/download"
-    var url = new URL(path, window.location.href);
+    var url = new URL(path, devUrl ? devUrl : window.location.href);
     url.searchParams.append("id", videoId.toString());
 
     return url.toString();
@@ -203,7 +208,7 @@ export function getDownloadVideoPath(videoId: number): string {
 
 export function getMp3DownloadPath(videoId: number): string {
     let path = "/api/videos/downloadMp3"
-    var url = new URL(path, window.location.href);
+    var url = new URL(path, devUrl ? devUrl : window.location.href);
     url.searchParams.append("id", videoId.toString());
 
     return url.toString();
@@ -211,7 +216,7 @@ export function getMp3DownloadPath(videoId: number): string {
 
 export function getVideoPath(videoId: number): string {
     let path = "/api/videos/video"
-    var url = new URL(path, window.location.href);
+    var url = new URL(path, devUrl ? devUrl : window.location.href);
     url.searchParams.append("id", videoId.toString());
 
     return url.toString();
@@ -219,7 +224,7 @@ export function getVideoPath(videoId: number): string {
 
 export function getThumbnailPath(videoId: number): string {
     let path = "/api/videos/thumbnail"
-    var url = new URL(path, window.location.href);
+    var url = new URL(path, devUrl ? devUrl : window.location.href);
     url.searchParams.append("id", videoId.toString());
 
     return url.toString();

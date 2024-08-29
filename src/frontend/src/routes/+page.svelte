@@ -1,22 +1,19 @@
 <script lang="ts">
-	import { Button, Table, Notification, Icon, paginationStore, Dialog, Radio } from 'svelte-ux';
-	import { mdiLoading, mdiCloseCircleOutline } from '@mdi/js';
 	import {
-		fetchVideoCount,
 		fetchVideoInfo,
 		fetchVideosJson,
-		getThumbnailPath,
 		getUsedStorage,
 		VideoOrderByParam,
-		type ApiVideoListResponse,
 		type ApiVideoResponse
 	} from '$lib/api_client';
-	import { onMount } from 'svelte';
-	import VideoView from '$lib/components/Videos/VideoView.svelte';
-	import VideoDownload from '$lib/components/Videos/VideoDownload.svelte';
 	import Pagination from '$lib/components/Pagination/Pagination.svelte';
+	import VideoDownload from '$lib/components/Videos/VideoDownload.svelte';
+	import VideoView from '$lib/components/Videos/VideoView.svelte';
+	import { orderByDescendingStore, orderByStore, videoSearchStore } from '$lib/Stores/FilterStores';
 	import { usedStorageStore } from '$lib/Stores/UsedStorageStore';
-	import { orderByStore, videoSearchStore, orderByDescendingStore } from '$lib/Stores/FilterStores';
+	import { mdiCloseCircleOutline } from '@mdi/js';
+	import { onMount } from 'svelte';
+	import { Icon, Notification, ProgressCircle } from 'svelte-ux';
 
 	let videos: ApiVideoResponse[] = [];
 	let videoCount = 0;
@@ -72,7 +69,7 @@
 		}
 	}
 
-	let isLoading = false;
+	let isLoading = true;
 	async function updateVideoInfo() {
 		isLoading = true;
 		await new Promise((resolve) => setTimeout(resolve, 100));
@@ -152,7 +149,7 @@
 <main style="height: {innerHeight - 64}px" class="p-2 pl-6 pr-6">
 	{#if isLoading}
 		<div class="flex w-full pt-10 justify-center items-center">
-			<Icon data={mdiLoading} class="animate-spin" size={'128px'} />
+			<ProgressCircle size={128} width={5} class="text-black dark:text-white" />
 		</div>
 	{:else}
 		<div class=" flex flex-col h-full">
@@ -168,7 +165,7 @@
 					style="width: {480 > innerWidth ? innerWidth : (videosPerPage * 500) / 2}px"
 					class="flex flex-wrap justify-left mt-5"
 				>
-					{#if videos.length < 1 && !isLoading}
+					{#if videos.length < 1}
 						<p class="text-xl font-medium w-full h-full text-center">
 							No videos. Start by downloading some!
 						</p>
