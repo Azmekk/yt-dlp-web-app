@@ -40,6 +40,8 @@ It features both light and dark themes and is designed with a mobile-friendly la
   </div>
 </div>
 
+# Installation
+
 ## Running locally
 If don't want to use docker, you can do the following: 
 1. Download the application **for your platform** as a zip file from the [latest release](https://github.com/Azmekk/yt-dlp-web-app/releases/latest) 
