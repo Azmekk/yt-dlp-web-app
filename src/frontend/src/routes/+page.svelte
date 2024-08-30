@@ -107,6 +107,7 @@
 				clearTimeout(searchTimeout);
 			}
 			searchTimeout = setTimeout(async () => {
+				page = 1;
 				await updateVideoInfo();
 			}, 400);
 		}
