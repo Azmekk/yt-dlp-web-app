@@ -22,7 +22,7 @@ COPY ./src/backend ./
 RUN apk add build-base
 
 RUN go mod download
-RUN CGO_ENABLED=1 GOOS=linux go build -o ./bin/build/backend
+RUN GOOS=linux go build -o ./bin/build/backend
 
 FROM alpine:latest
 
