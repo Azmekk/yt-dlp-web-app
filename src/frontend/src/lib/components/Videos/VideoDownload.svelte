@@ -153,7 +153,7 @@
 <div class="w-full absolute">
 	<Dialog
 		loading={dialogLoading || saveVideoButtonLoading}
-		class="p-5 w-full sm:w-1/2 xl:w-1/4"
+		class="p-5 w-full sm:w-1/2 xl:w-1/3"
 		bind:open={downloadVideoDialogOpen}
 		on:close={clearDialogFieldsAndClose}
 	>
