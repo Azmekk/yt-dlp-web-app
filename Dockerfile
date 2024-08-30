@@ -1,4 +1,4 @@
-FROM node:20.17.0-alpine AS yt-dlp-web-frontend-builder
+FROM node:22.7.0-alpine AS yt-dlp-web-frontend-builder
 
 WORKDIR /app/frontend
 
