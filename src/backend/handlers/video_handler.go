@@ -3,7 +3,9 @@ package handlers
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
+	"io/fs"
 	"math"
 	"net/http"
 	"net/url"
@@ -407,14 +409,14 @@ func deleteVideoInternal(videoId uint) error {
 
 	err = os.Remove(filepath.Join(utils.DefaultDownloadDir, video.FileName))
 
-	if err != nil && err != os.ErrNotExist {
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		fmt.Println(fmt.Sprintf("Error when trying to delete video with ID %d: ", videoId), err)
 		return fmt.Errorf("something went wrong when deleting video")
 	}
 
 	err = os.Remove(filepath.Join(utils.DefaultDownloadDir, video.ThumnailName))
 
-	if err != nil && err != os.ErrNotExist {
+	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		fmt.Println(fmt.Sprintf("Error when trying to delete thumbnail for video with ID %d: ", videoId), err)
 		return fmt.Errorf("error when trying to delete thumbnail for video with ID %d: ", videoId)
 	}
