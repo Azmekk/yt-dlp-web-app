@@ -1,8 +1,8 @@
 <script lang="ts">
 	import {
-		getVideoDimensions,
-		getYoutubeName,
-		saveVideo,
+		getVideoDimensionsAsync,
+		getYoutubeNameAsync,
+		saveVideoAsync,
 		type VideoDimensionsResponse
 	} from '$lib/api_client';
 	import { getFormattedVideoName } from '$lib/utils';
@@ -91,49 +91,49 @@
 		saveVideoButtonLoading = false;
 	}
 
-	async function fetchName() {
+	async function fetchNameAsync() {
 		if (videoUrl == '') {
 			console.error("Can't get video name, video url is empty.");
 			return;
 		}
 
 		try {
-			var nameResponse = await getYoutubeName(videoUrl);
+			var nameResponse = await getYoutubeNameAsync(videoUrl);
 			fileName = (nameResponse == null || nameResponse?.title == "") ? getFormattedVideoName() : nameResponse?.title;
 		} catch (error) {
 			console.error('Failed to fetch video name.');
 		}
 	}
 
-	async function fetchDimensions() {
+	async function fetchDimensionsAsync() {
 		if (!dimensionsToggle || videoUrl == "") {
 			return;
 		}
 
 		try {
-			var dimensionsResponse = await getVideoDimensions(videoUrl);
+			var dimensionsResponse = await getVideoDimensionsAsync(videoUrl);
 			maxDimension = dimensionsResponse.height ?? 2160;
 		} catch (error) {
 			console.error('Failed to fetch video max dimensions.');
 		}
 	}
 
-	async function getVideoInfo() {
+	async function getVideoInfoAsync() {
 		dialogLoading = true;
-		await fetchName();
-		await fetchDimensions();
+		await fetchNameAsync();
+		await fetchDimensionsAsync();
 		dialogLoading = false;
 	}
 
 	let saveVideoButtonLoading = false;
-	async function submitVideoSave() {
+	async function submitVideoSaveAsync() {
 		saveVideoButtonLoading = true;
 		try {
 			if (dimensionsToggle) {
-				await saveVideo(videoUrl, fileName, selectedFormat, selectedDimension);
+				await saveVideoAsync(videoUrl, fileName, selectedFormat, selectedDimension);
 			}
 			else{
-				await saveVideo(videoUrl, fileName, selectedFormat);
+				await saveVideoAsync(videoUrl, fileName, selectedFormat);
 			}
 			
 		} catch (error) {
@@ -157,14 +157,14 @@
 		bind:open={downloadVideoDialogOpen}
 		on:close={clearDialogFieldsAndClose}
 	>
-		<form on:submit={async () => submitVideoSave()}>
+		<form on:submit={async () => submitVideoSaveAsync()}>
 			<div class="flex w-full mb-5">
 				<Field class="w-full" label="Video url" labelPlacement="top">
 					<Input
 						bind:value={videoUrl}
 						required={true}
 						placeholder="eg. https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-						on:input={async () => await getVideoInfo()}
+						on:input={async () => await getVideoInfoAsync()}
 					/>
 				</Field>
 			</div>
@@ -193,7 +193,7 @@
 						<Switch
 							on:change={async () => {
 								dialogLoading = true;
-								await fetchDimensions();
+								await fetchDimensionsAsync();
 								dialogLoading = false;
 							}}
 							bind:checked={dimensionsToggle}

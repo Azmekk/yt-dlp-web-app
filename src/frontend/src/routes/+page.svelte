@@ -1,8 +1,8 @@
 <script lang="ts">
 	import {
-		fetchVideoInfo,
-		fetchVideosJson,
-		getUsedStorage,
+		fetchVideoInfoAsync,
+		fetchVideosJsonAsync,
+		getUsedStorageAsync,
 		VideoOrderByParam,
 		type ApiVideoResponse
 	} from '$lib/api_client';
@@ -47,10 +47,10 @@
 	let orderBy: VideoOrderByParam = VideoOrderByParam.Date;
 	let orderByDescending: boolean = true;
 	let videoSearch: string = '';
-	async function getVideos() {
+	async function getVideosAsync() {
 		let result = null;
 		try {
-			result = await fetchVideosJson(videosPerPage, page, orderBy, orderByDescending, videoSearch);
+			result = await fetchVideosJsonAsync(videosPerPage, page, orderBy, orderByDescending, videoSearch);
 		} catch (error) {
 			console.log('Failed to fetch videos. Error: ' + error);
 			showErrorDialog('Fetch error', 'Failed to fetch videos.');
@@ -60,9 +60,9 @@
 		}
 	}
 
-	async function updateUsedStorage() {
+	async function updateUsedStorageAsync() {
 		try {
-			let response = await getUsedStorage();
+			let response = await getUsedStorageAsync();
 			usedStorageStore.update((x) => (x = response.usedStorage));
 		} catch (error) {
 			console.error('Something went wrong when fetching storage usage: ', error);
@@ -70,31 +70,31 @@
 	}
 
 	let isLoading = true;
-	async function updateVideoInfo() {
+	async function updateVideoInfoAsync() {
 		isLoading = true;
 		await new Promise((resolve) => setTimeout(resolve, 100));
 
 		videosPerPage = Math.max(Math.floor(Math.floor((innerWidth - 240) / 480) * 2), 3);
 
-		await getVideos();
+		await getVideosAsync();
 
 		totalPages = Math.ceil(videoCount / videosPerPage);
 
-		await updateUsedStorage();
+		await updateUsedStorageAsync();
 		isLoading = false;
 	}
 
 	orderByStore.subscribe(async (x) => {
 		if (orderBy != x) {
 			orderBy = x;
-			await updateVideoInfo();
+			await updateVideoInfoAsync();
 		}
 	});
 
 	orderByDescendingStore.subscribe(async (x) => {
 		if (orderByDescending != x) {
 			orderByDescending = x;
-			await updateVideoInfo();
+			await updateVideoInfoAsync();
 		}
 	});
 
@@ -108,13 +108,13 @@
 			}
 			searchTimeout = setTimeout(async () => {
 				page = 1;
-				await updateVideoInfo();
+				await updateVideoInfoAsync();
 			}, 400);
 		}
 	});
 
 	let interval: NodeJS.Timeout;
-	async function checkVideosDownloadStatus() {
+	async function checkVideosDownloadStatusAsync() {
 		if (videos.every((video) => video.downloaded)) {
 			return;
 		}
@@ -127,10 +127,15 @@
 			}
 
 			try {
-				const updatedVideo = await fetchVideoInfo(video.id);
+				const updatedVideo = await fetchVideoInfoAsync(video.id);
 				if (updatedVideo == null) {
 					throw new Error('Video response was null.');
 				}
+
+				if (updatedVideo.downloaded) {
+					await updateUsedStorageAsync();
+				}
+
 				videos[i] = updatedVideo;
 				videos = videos;
 			} catch (error) {
@@ -140,8 +145,8 @@
 	}
 
 	onMount(async () => {
-		await updateVideoInfo();
-		interval = setInterval(checkVideosDownloadStatus, 1000);
+		await updateVideoInfoAsync();
+		interval = setInterval(checkVideosDownloadStatusAsync, 1000);
 	});
 </script>
 
@@ -155,7 +160,7 @@
 	{:else}
 		<div class=" flex flex-col h-full">
 			<VideoDownload
-				on:videoSaved={async () => await updateVideoInfo()}
+				on:videoSaved={async () => await updateVideoInfoAsync()}
 				on:videoSaveFail={(e) => {
 					showErrorDialog('Error', `Failed to download video: ${e.detail.error}`);
 				}}
@@ -172,14 +177,14 @@
 						</p>
 					{/if}
 					{#each videos as video (video.id)}
-						<VideoView on:videoDeleted={async () => await updateVideoInfo()} bind:video />
+						<VideoView on:videoDeleted={async () => await updateVideoInfoAsync()} bind:video />
 					{/each}
 				</div>
 			</div>
 
 			<div class="mb-2 mt-auto flex justify-center">
 				<Pagination
-					on:pageUpdated={updateVideoInfo}
+					on:pageUpdated={updateVideoInfoAsync}
 					bind:currentPage={page}
 					bind:total={videoCount}
 					bind:perPage={videosPerPage}

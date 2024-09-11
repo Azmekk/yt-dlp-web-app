@@ -133,21 +133,6 @@ func SaveVideoHandler(w http.ResponseWriter, r *http.Request) {
 	if existingVideo != nil && !existingVideo.DeletedAt.Valid {
 		utils.WriteJsonError(w, fmt.Sprintf("Video already exists under the name: %s", existingVideo.FileName), http.StatusConflict)
 		return
-	} else if existingVideo != nil && existingVideo.DeletedAt.Valid {
-		fmt.Println("Restoring existing video: ", existingVideo.FileName)
-
-		videoName := fmt.Sprintf("%s.%s", requestedFileName, requestedFormat)
-
-		err = database.RestoreDeletedVideo(existingVideo)
-		if err != nil {
-			fmt.Println("Error when restoring existing video: ", err)
-			utils.WriteJsonError(w, "Issue when restoring existing video.", http.StatusBadRequest)
-			return
-		}
-
-		videoRecord = existingVideo
-		videoRecord.FileName = videoName
-
 	} else {
 		videoName := fmt.Sprintf("%s.%s", requestedFileName, requestedFormat)
 		videoRecord, err = database.CreateVideo(videoUrl, videoName)
@@ -349,7 +334,8 @@ func GetThumbnail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	utils.FileResponse(w, r, filepath.Join(utils.DefaultDownloadDir, video.ThumnailName))
+	thumbnailPath := filepath.Join(utils.DefaultDownloadDir, video.ThumnailName)
+	utils.FileResponse(w, r, thumbnailPath)
 }
 
 func GetVideoInfo(w http.ResponseWriter, r *http.Request) {
@@ -407,27 +393,44 @@ func deleteVideoInternal(videoId uint) error {
 		return fmt.Errorf("something went wrong when getting video")
 	}
 
-	err = os.Remove(filepath.Join(utils.DefaultDownloadDir, video.FileName))
+	err = deleteDownloadedFile(video.FileName)
 
-	if err != nil && !errors.Is(err, fs.ErrNotExist) {
+	if err != nil {
 		fmt.Println(fmt.Sprintf("Error when trying to delete video with ID %d: ", videoId), err)
-		return fmt.Errorf("something went wrong when deleting video")
+		return err
 	}
 
-	err = os.Remove(filepath.Join(utils.DefaultDownloadDir, video.ThumnailName))
+	err = deleteDownloadedFile(video.ThumnailName)
 
 	if err != nil && !errors.Is(err, fs.ErrNotExist) {
 		fmt.Println(fmt.Sprintf("Error when trying to delete thumbnail for video with ID %d: ", videoId), err)
-		return fmt.Errorf("error when trying to delete thumbnail for video with ID %d: ", videoId)
+		return err
 	}
 
-	result := database.DbConn.Delete(&video)
+	result := database.DbConn.Unscoped().Delete(&video)
 	if result.Error != nil {
 		fmt.Println(fmt.Sprintf("Error when trying to delete video with ID %d: ", videoId), err)
-		return fmt.Errorf("error when trying to delete video with ID %d: ", videoId)
+		return result.Error
 	}
 
 	return nil
+}
+
+func deleteDownloadedFile(fileName string) error {
+	if fileName == "" {
+		fmt.Println("Provided filename to delete was empty.")
+		return nil
+	}
+
+	filepath := filepath.Join(utils.DefaultDownloadDir, fileName)
+	if _, err := os.Stat(filepath); errors.Is(err, os.ErrNotExist) {
+		fmt.Println("No file found to delete.")
+		return nil
+	}
+
+	err := os.Remove(filepath)
+
+	return err
 }
 
 func UpdateName(w http.ResponseWriter, r *http.Request) {
@@ -570,7 +573,9 @@ func createVideo(videoUrl string, videoRecord *database.Video, dimensions VideoD
 		return
 	}
 
-	thumbnailName := utils.DownloadAndCreateThumbnail(videoInfo.ThumbnailURL, videoRecord.FileName)
+	videoNameWithoutExt := utils.GetFilenameWithoutExt(videoRecord.FileName)
+
+	thumbnailName := utils.DownloadAndCreateThumbnail(videoInfo.ThumbnailURL, videoNameWithoutExt)
 
 	if thumbnailName == "" {
 		thumbnailName = utils.CreateThumbnailFromFrame(videoRecord.FileName)

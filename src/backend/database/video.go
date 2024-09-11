@@ -149,7 +149,7 @@ func CheckForExistingVideo(url string) (*Video, error) {
 }
 
 func RestoreDeletedVideo(video *Video) error {
-	result := DbConn.Model(video).Update("DeletedAt", nil)
+	result := DbConn.Unscoped().Model(video).Update("deleted_at", nil)
 	if result.Error != nil {
 		return result.Error
 	}

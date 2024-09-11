@@ -17,7 +17,7 @@
 	} from 'svelte-ux';
 
 	import { page } from '$app/stores';
-	import { getUsedStorage, VideoOrderByParam } from '$lib/api_client';
+	import { getUsedStorageAsync, VideoOrderByParam } from '$lib/api_client';
 	import { orderByDescendingStore, orderByStore, videoSearchStore } from '$lib/Stores/FilterStores';
 	import { usedStorageStore } from '$lib/Stores/UsedStorageStore';
 	import { formatBytes } from '$lib/utils';
@@ -65,10 +65,10 @@
 	let orderByDialogOpen = false;
 
 	let usedStorageLoading = false;
-	async function updateUsedStorage() {
+	async function updateUsedStorageAsync() {
 		usedStorageLoading = true;
 		try {
-			let response = await getUsedStorage();
+			let response = await getUsedStorageAsync();
 			usedStorageStore.update((x) => (x = response.usedStorage));
 		} catch (error) {
 			console.error('Something went wrong when fetching storage usage: ', error);
@@ -83,7 +83,7 @@
 	}
 
 	onMount(async () => {
-		await updateUsedStorage();
+		await updateUsedStorageAsync();
 	});
 </script>
 

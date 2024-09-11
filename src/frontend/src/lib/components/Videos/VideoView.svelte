@@ -1,11 +1,11 @@
 <script lang="ts">
 	import {
-		deleteVideo as client_deleteVideo,
+		deleteVideoAsync as client_deleteVideo,
 		getDownloadVideoPath,
 		getMp3DownloadPath,
 		getThumbnailPath,
 		getVideoPath,
-		renameVideo,
+		renameVideoAsync,
 		type ApiVideoResponse
 	} from '$lib/api_client';
 	import { formatBytes, formatDate } from '$lib/utils';
@@ -32,7 +32,7 @@
 	let videoHeight = 270;
 
 	let deleteButtonLoading = false;
-	async function deleteVideo() {
+	async function deleteVideoAsync() {
 		deleteButtonLoading = true;
 		try {
 			await client_deleteVideo(video.id);
@@ -47,7 +47,7 @@
 	let editingName = false;
 	let newName = '';
 	let editButtonLoading = false;
-	async function updateVideoName() {
+	async function updateVideoNameAsync() {
 		if (newName == '' || newName == video.name) {
 			console.error('New name is empty.');
 			return;
@@ -56,7 +56,7 @@
 		editButtonLoading = true;
 
 		try {
-			await renameVideo(video.id, newName);
+			await renameVideoAsync(video.id, newName);
             video.name = newName;
 			dispatch('videoModified');
             clearNameEditInputs();
@@ -133,7 +133,7 @@
 
 						<Button
 							loading={editButtonLoading}
-							on:click={async () => await updateVideoName()}
+							on:click={async () => await updateVideoNameAsync()}
 							variant="fill"
 							color="success"
 							rounded
@@ -205,7 +205,7 @@
 			<Button
 				class="mr-1"
 				icon={mdiTrashCan}
-				on:click={async () => await deleteVideo()}
+				on:click={async () => await deleteVideoAsync()}
 				variant="fill"
 				color="success">Yes</Button
 			>

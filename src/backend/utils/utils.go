@@ -179,7 +179,9 @@ func CreateThumbnailFromFrame(videoName string) string {
 		return ""
 	}
 
-	outputPath := filepath.Join(DefaultDownloadDir, fmt.Sprintf("%s_thumbnail.jpg", videoName))
+	videoNameWithoutExt := GetFilenameWithoutExt(videoName)
+	thumbnailName := fmt.Sprintf("%s_thumbnail.jpg", videoNameWithoutExt)
+	outputPath := filepath.Join(DefaultDownloadDir, thumbnailName)
 
 	cmd := exec.Command(DefaultFfmpegCommand, "-i", videoPath, "-vf", "select=eq(n\\,0)", "-vsync", "vfr", "-q:v", "2", outputPath)
 	if err := cmd.Run(); err != nil {
@@ -187,7 +189,7 @@ func CreateThumbnailFromFrame(videoName string) string {
 		return ""
 	}
 
-	return outputPath
+	return thumbnailName
 }
 
 func GetFolderSize(folderPath string) (int64, error) {
