@@ -80,74 +80,91 @@ namespace YT_DLP_Web_App_Backend.Services
 
         public async Task DownloadVideoAsync(string url, string videoName, VideoDimensions? dimensions, CancellationToken cancellationToken = default)
         {
-            Console.WriteLine("Starting download...");
-            if(!Uri.IsWellFormedUriString(url, UriKind.Absolute))
-            {
-                throw new Exception($"Invalid url {url}");
-            }
-
-            Console.WriteLine("Url Validated.");
             string filename = videoName + ".mp4";
             Video videoRecord = await videosService.CreateInitialVideoRecord(url, filename);
 
-            VideosInProgressStorage.AddVideoToTrack(videoRecord.Id);
-
-            YoutubeDL ytdl = new()
+            try
             {
-                YoutubeDLPath = DependenciesHelper.YtDlpPath,
-                FFmpegPath = DependenciesHelper.FfmpegPath,
-                OutputFolder = AppConstants.DefaultDownloadDir
-            };
+                if(!Uri.IsWellFormedUriString(url, UriKind.Absolute))
+                {
+                    throw new Exception($"Invalid url {url}");
+                }
 
-            string requestedFormat;
-            if(dimensions != null && dimensions.Height > 0 && dimensions.Width > 0)
-            {
-                requestedFormat = $"bestvideo[height={dimensions.Height}][width={dimensions.Width}]+bestaudio/best";
+                VideosInProgressStorage.AddVideoToTrack(videoRecord.Id);
+
+                YoutubeDL ytdl = new()
+                {
+                    YoutubeDLPath = DependenciesHelper.YtDlpPath,
+                    FFmpegPath = DependenciesHelper.FfmpegPath,
+                    OutputFolder = AppConstants.DefaultDownloadDir
+                };
+
+                string requestedFormat;
+                if(dimensions != null && dimensions.Height > 0 && dimensions.Width > 0)
+                {
+                    requestedFormat = $"bestvideo[height={dimensions.Height}][width={dimensions.Width}]+bestaudio/best";
+                }
+                else
+                {
+                    requestedFormat = "bestvideo+bestaudio/best";
+                }
+
+                Progress<DownloadProgress> progress = new(x =>
+                {
+                    VideosInProgressStorage.UpdateVideoPercent(videoRecord.Id, 100 * x.Progress);
+                });
+
+                OptionSet options = new()
+                {
+                    Output = Path.Join(AppConstants.DefaultDownloadDir, videoName + ".%(ext)s"),
+                    WriteThumbnail = true,
+                    MergeOutputFormat = DownloadMergeFormat.Mp4,
+                    Format = requestedFormat,
+                    RecodeVideo = VideoRecodeFormat.Mp4,
+                    ConvertThumbnails = "jpg",
+                };
+
+                RunResult<string> result = await ytdl.RunVideoDownload(url, progress: progress, ct: cancellationToken, overrideOptions: options);
+
+                if(!result.Success)
+                {
+                    var errorString = string.Join("\n", result.ErrorOutput);
+                    throw new Exception(errorString);
+                }
+
+                string finalFilePath = Path.Join(AppConstants.DefaultDownloadDir, filename);
+                videoRecord.Downloaded = true;
+                videoRecord.ThumbnailName = videoName + ".jpg";
+                videoRecord.Size = new FileInfo(finalFilePath).Length;
+                videoRecord.UpdatedAt = DateTime.UtcNow;
+
+                await videoDbContext.SaveChangesAsync();
+                VideosInProgressStorage.MarkVideoDownloaded(videoRecord.Id);
             }
-            else
+            catch(Exception ex)
             {
-                requestedFormat = "bestvideo+bestaudio/best";
-            }
+                string finalFilePath = Path.Join(AppConstants.DefaultDownloadDir, filename);
+                string finalThumbnailPath = Path.Join(AppConstants.DefaultDownloadDir, videoName + ".jpg");
 
-            Progress<DownloadProgress> progress = new(x =>
-            {
-                VideosInProgressStorage.UpdateVideoPercent(videoRecord.Id, 100 * x.Progress);
-            });
-
-            OptionSet options = new()
-            {
-                Output = Path.Join(AppConstants.DefaultDownloadDir, videoName + ".%(ext)s"),
-                WriteThumbnail = true,
-                MergeOutputFormat = DownloadMergeFormat.Mp4,
-                Format = requestedFormat,
-                RecodeVideo = VideoRecodeFormat.Mp4,
-                ConvertThumbnails = "jpg",
-            };
-
-            Console.WriteLine("Running yt_dlp");
-            RunResult<string> result = await ytdl.RunVideoDownload(url, progress: progress, ct: cancellationToken, overrideOptions: options);
-            Console.WriteLine("Finished running");
-
-            string finalFilePath = Path.Join(AppConstants.DefaultDownloadDir, filename);
-
-            if(!result.Success)
-            {
                 if(File.Exists(finalFilePath))
                 {
                     File.Delete(finalFilePath);
                 }
 
-                var errorString = string.Join("\n", result.ErrorOutput);
-                throw new Exception($"Failed to download video due to ex: {errorString}");
+                if(File.Exists(finalThumbnailPath))
+                {
+                    File.Delete(finalThumbnailPath);
+                }
+
+                if(videoRecord != null)
+                {
+                    videoDbContext.Remove(videoRecord);
+                    await videoDbContext.SaveChangesAsync();
+                }
+                
+                throw new Exception($"Failed to download video due to ex: {ex}");
             }
-
-            videoRecord.Downloaded = true;
-            videoRecord.ThumbnailName = videoName + ".jpg";
-            videoRecord.Size = new FileInfo(finalFilePath).Length;
-            videoRecord.UpdatedAt = DateTime.UtcNow;
-
-            await videoDbContext.SaveChangesAsync();
-            VideosInProgressStorage.MarkVideoDownloaded(videoRecord.Id);
+            
         }
     }
 }

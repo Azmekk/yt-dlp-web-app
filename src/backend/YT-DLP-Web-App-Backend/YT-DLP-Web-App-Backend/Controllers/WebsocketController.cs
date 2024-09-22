@@ -38,7 +38,7 @@ namespace YT_DLP_Web_App_Backend.Controllers
 
                 VideosInProgressStorage.AddVideoDownloadUpdatedHandler(videoDownloadHandler);
 
-                var cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
+                var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
 
                 await Task.Run(async () =>
                 {
@@ -61,7 +61,7 @@ namespace YT_DLP_Web_App_Backend.Controllers
                             if(message.Equals("renew", StringComparison.CurrentCultureIgnoreCase))
                             {
                                 cts.Dispose();
-                                cts = new CancellationTokenSource(TimeSpan.FromMinutes(2));
+                                cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
                             }
                         }
                     }
