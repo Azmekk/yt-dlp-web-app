@@ -18,6 +18,12 @@ namespace YT_DLP_Web_App_Backend.Controllers
             var proceedWithDownload = true;
             try
             {
+                if(request.VideoName.Any(x => Path.GetInvalidFileNameChars().Contains(x)))
+                {
+                    proceedWithDownload = false;
+                    return BadRequest("Videoname contains invalid characters");
+                }
+
                 if(await videosService.VideoExists(request.VideoUrl))
                 {
                     proceedWithDownload = false;
@@ -114,7 +120,7 @@ namespace YT_DLP_Web_App_Backend.Controllers
             }
             catch(Exception)
             {
-                return StatusCode(500, "An unexpected error occurred when deleting video.");
+                return StatusCode(500, "An unexpected error occurred when converting to mp3.");
             }
         }
 
@@ -134,9 +140,13 @@ namespace YT_DLP_Web_App_Backend.Controllers
         }
 
         [HttpPatch]
-
-        public async Task<ActionResult<Video>> GetVideoInfo([FromBody] UpdateVideoNameRequest updateNameRequest)
+        public async Task<ActionResult<Video>> UpdateVideoName([FromBody] UpdateVideoNameRequest updateNameRequest)
         {
+            if(updateNameRequest.NewName.Any(x => Path.GetInvalidFileNameChars().Contains(x)))
+            {
+                return BadRequest("Videoname contains invalid characters");
+            }
+
             Video? video = await videosService.UpdateVideoName(updateNameRequest.VideoId, updateNameRequest.NewName);
 
             if(video == null)
@@ -147,6 +157,17 @@ namespace YT_DLP_Web_App_Backend.Controllers
             return Ok(video);
         }
 
+        [HttpGet]
+        public async Task<ActionResult<Video>> GetVideoInfo([Required] int videoId)
+        {
+            Video? video = await videosService.GetVideoById(videoId);
 
+            if(video == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(video);
+        }
     }
 }

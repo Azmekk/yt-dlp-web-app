@@ -16,8 +16,8 @@ namespace YT_DLP_Web_App_Backend.Services
         {
             Video video = new()
             {
-                CreatedAt = DateTime.Now,
-                UpdatedAt = DateTime.Now,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
                 DeletedAt = null,
                 FileName = name,
                 ThumbnailName = "",
@@ -33,7 +33,7 @@ namespace YT_DLP_Web_App_Backend.Services
         }
 
         public async Task<List<Video>> GetVideosAsync(int take, int page, OrderVideosBy orderBy, bool descending, string search = "")
-        {
+            {
             var queryable = videoDbContext.Videos
                 .Where(x => x.DeletedAt == null);
 
@@ -48,32 +48,35 @@ namespace YT_DLP_Web_App_Backend.Services
                     if(descending)
                     {
                         queryable = queryable.OrderByDescending(x => x.CreatedAt);
+                        break;
                     }
                     else
                     {
                         queryable = queryable.OrderBy(x => x.CreatedAt);
+                        break;
                     }
-                    break;
                 case OrderVideosBy.FileName:
                     if(descending)
                     {
                         queryable = queryable.OrderByDescending(x => x.CreatedAt);
+                        break;
                     }
                     else
                     {
                         queryable = queryable.OrderBy(x => x.CreatedAt);
+                        break;
                     }
-                    break;
                 case OrderVideosBy.Size:
                     if(descending)
                     {
                         queryable = queryable.OrderByDescending(x => x.CreatedAt);
+                        break;
                     }
                     else
                     {
                         queryable = queryable.OrderBy(x => x.CreatedAt);
+                        break;
                     }
-                    break;
             }
 
             queryable = queryable
@@ -143,7 +146,7 @@ namespace YT_DLP_Web_App_Backend.Services
             }
 
             string videoPath = Path.Join(AppConstants.DefaultDownloadDir, videoName);
-            var ffmpegArguments = $"-i {videoPath} -q:a 0 -map a {mp3Path}";
+            var ffmpegArguments = $"-i \"{videoPath}\" -q:a 0 -map a \"{mp3Path}\"";
 
             var processStartInfo = new ProcessStartInfo
             {
@@ -163,6 +166,8 @@ namespace YT_DLP_Web_App_Backend.Services
             }
 
             await process.WaitForExitAsync();
+            string stdOut = await process.StandardOutput.ReadToEndAsync();
+            string stdErr = await process.StandardError.ReadToEndAsync();
 
             return File.OpenRead(mp3Path);
         }

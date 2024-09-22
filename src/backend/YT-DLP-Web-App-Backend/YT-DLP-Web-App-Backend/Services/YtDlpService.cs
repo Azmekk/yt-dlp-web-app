@@ -72,7 +72,8 @@ namespace YT_DLP_Web_App_Backend.Services
 
             if(!runResult.Success)
             {
-                throw new Exception($"YtDlp failed with error: {runResult.ErrorOutput}");
+                string errorString = string.Join("\n", runResult.ErrorOutput);
+                throw new Exception($"YtDlp failed with error: {errorString}");
             }
 
             return runResult.Data;

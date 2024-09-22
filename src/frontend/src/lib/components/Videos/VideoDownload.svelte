@@ -1,10 +1,5 @@
 <script lang="ts">
-	import {
-		getVideoDimensionsAsync,
-		getYoutubeNameAsync,
-		saveVideoAsync,
-		type VideoDimensionsResponse
-	} from '$lib/api_client';
+
 	import { getFormattedVideoName } from '$lib/utils';
 	import { mdiCancel, mdiDownload, mdiPlus } from '@mdi/js';
 	import { createEventDispatcher } from 'svelte';

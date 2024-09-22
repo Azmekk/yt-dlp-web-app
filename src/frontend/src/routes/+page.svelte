@@ -1,11 +1,4 @@
 <script lang="ts">
-	import {
-		fetchVideoInfoAsync,
-		fetchVideosJsonAsync,
-		getUsedStorageAsync,
-		VideoOrderByParam,
-		type ApiVideoResponse
-	} from '$lib/api_client';
 	import Pagination from '$lib/components/Pagination/Pagination.svelte';
 	import VideoDownload from '$lib/components/Videos/VideoDownload.svelte';
 	import VideoView from '$lib/components/Videos/VideoView.svelte';

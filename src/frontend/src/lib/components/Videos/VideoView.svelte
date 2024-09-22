@@ -1,13 +1,4 @@
 <script lang="ts">
-	import {
-		deleteVideoAsync as client_deleteVideo,
-		getDownloadVideoPath,
-		getMp3DownloadPath,
-		getThumbnailPath,
-		getVideoPath,
-		renameVideoAsync,
-		type ApiVideoResponse
-	} from '$lib/api_client';
 	import { formatBytes, formatDate } from '$lib/utils';
 	import {
 		mdiCancel,

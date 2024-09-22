@@ -16,8 +16,8 @@
 		Tooltip
 	} from 'svelte-ux';
 
+	import * as backendClient from '$lib/api-clients/backend-client/index'
 	import { page } from '$app/stores';
-	import { getUsedStorageAsync, VideoOrderByParam } from '$lib/api_client';
 	import { orderByDescendingStore, orderByStore, videoSearchStore } from '$lib/Stores/FilterStores';
 	import { usedStorageStore } from '$lib/Stores/UsedStorageStore';
 	import { formatBytes } from '$lib/utils';
