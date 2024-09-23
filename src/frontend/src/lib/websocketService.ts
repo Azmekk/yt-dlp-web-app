@@ -16,7 +16,6 @@ export class WebSocketService {
         };
 
         this.socket.onmessage = async (event: MessageEvent) => {
-            // Handle incoming messages via the callback
             await this.onMessageCallback(event.data);
         };
 

@@ -73,7 +73,7 @@
 			thumbnailUrl = BASE_PATH + "/api/videos/GetThumbnail?thumbnailName=" + video.thumbnailName
 		}
 		videoUrl = BASE_PATH + "/api/videos/Getvideo?videoName=" + video.fileName
-		mp3Url = BASE_PATH + "/api/videos/GetMp3?videoName=" + video.fileName
+		mp3Url = BASE_PATH + "/api/videos/GetMp3?videoId=" + video.id
 
 
 		videoWidth = 480 > innerWidth ? innerWidth : 480;

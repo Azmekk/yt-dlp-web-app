@@ -52,7 +52,7 @@ export interface ApiVideosGetMaxDimensionsGetRequest {
 }
 
 export interface ApiVideosGetMp3GetRequest {
-    videoName: string;
+    videoId: number;
 }
 
 export interface ApiVideosGetNameGetRequest {
@@ -161,17 +161,17 @@ export class VideosApi extends runtime.BaseAPI {
     /**
      */
     async apiVideosGetMp3GetRaw(requestParameters: ApiVideosGetMp3GetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        if (requestParameters['videoName'] == null) {
+        if (requestParameters['videoId'] == null) {
             throw new runtime.RequiredError(
-                'videoName',
-                'Required parameter "videoName" was null or undefined when calling apiVideosGetMp3Get().'
+                'videoId',
+                'Required parameter "videoId" was null or undefined when calling apiVideosGetMp3Get().'
             );
         }
 
         const queryParameters: any = {};
 
-        if (requestParameters['videoName'] != null) {
-            queryParameters['videoName'] = requestParameters['videoName'];
+        if (requestParameters['videoId'] != null) {
+            queryParameters['videoId'] = requestParameters['videoId'];
         }
 
         const headerParameters: runtime.HTTPHeaders = {};

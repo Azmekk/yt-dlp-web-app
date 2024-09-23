@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.VisualBasic;
 using System;
 using System.Diagnostics;
+using System.Reflection.Metadata.Ecma335;
 using System.Security.Cryptography.X509Certificates;
 using YT_DLP_Web_App_Backend.Constants;
 using YT_DLP_Web_App_Backend.Database;
@@ -13,7 +14,7 @@ using YT_DLP_Web_App_Backend.Helpers;
 
 namespace YT_DLP_Web_App_Backend.Services
 {
-    public class VideosService(VideoDbContext videoDbContext)
+    public class VideosService(VideoDbContext videoDbContext, YtDlpService ytDlpService)
     {
         public async Task<Video> CreateInitialVideoRecord(string url, string name)
         {
@@ -121,6 +122,12 @@ namespace YT_DLP_Web_App_Backend.Services
                 File.Delete(thumbnailPath);
             }
 
+            var mp3Path = Path.Join(AppConstants.DefaultDownloadDir, video.Mp3FileName);
+            if(File.Exists(thumbnailPath))
+            {
+                File.Delete(thumbnailPath);
+            }
+
             videoDbContext.Remove(video);
             await videoDbContext.SaveChangesAsync();
         }
@@ -137,27 +144,39 @@ namespace YT_DLP_Web_App_Backend.Services
             return await File.ReadAllBytesAsync(filePath);
         }
 
-        public async Task<byte[]?> ExtractMp3(string videoName)
+        public async Task<(byte[]?, string?)> ExtractMp3(int videoId)
         {
-            string videoNameNoExtension = videoName.TrimEnd(Path.GetExtension(videoName));
+            Video? video = await videoDbContext.Videos.FirstOrDefaultAsync(x => x.Id == videoId);
+
+            if(video == null)
+            {
+                return (null, null);
+            }
+
+            string existingVideoPath = Path.Join(AppConstants.DefaultDownloadDir, video.Mp3FileName);
+            if(video.Mp3FileName != null && File.Exists(existingVideoPath))
+            {
+                return (await File.ReadAllBytesAsync(existingVideoPath), video.Mp3FileName);
+            }
+
+            string videoNameNoExtension = video.FileName.TrimEnd(Path.GetExtension(video.FileName));
             string mp3Name = videoNameNoExtension + ".mp3";
 
             string mp3Path = Path.Join(AppConstants.DefaultDownloadDir, mp3Name);
-            if(File.Exists(mp3Path))
-            {
-                return await File.ReadAllBytesAsync(mp3Path);
-            }
 
-            string videoPath = Path.Join(AppConstants.DefaultDownloadDir, videoName);
+            string videoPath = Path.Join(AppConstants.DefaultDownloadDir, video.FileName);
             if(!File.Exists(videoPath))
             {
-                return null;
+                return (null, null);
             }
 
             Engine ffmpeg = new(DependenciesHelper.FfmpegPath);
             await ffmpeg.ExecuteAsync($"-i \"{videoPath}\" -q:a 0 -map 0:a \"{mp3Path}\"", default);
 
-            return await File.ReadAllBytesAsync(mp3Path);
+            video.Mp3FileName = mp3Name;
+            await videoDbContext.SaveChangesAsync();
+
+            return (await File.ReadAllBytesAsync(mp3Path), mp3Name);
         }
 
         public async Task<Video?> UpdateVideoName(int videoId, string newName)
@@ -186,6 +205,22 @@ namespace YT_DLP_Web_App_Backend.Services
                 File.Move(thumbnailPath, newThumbnailPath);
             }
 
+            if(video.Mp3FileName != null)
+            {
+                string mp3Name = Path.Join(AppConstants.DefaultDownloadDir, video.Mp3FileName);
+                var mp3Path = Path.Join(AppConstants.DefaultDownloadDir, newThumbnailName);
+
+                string newMp3Name = videoNameNoExtension + Path.GetExtension(video.Mp3FileName);
+                string newMp3Path = Path.Join(AppConstants.DefaultDownloadDir, newMp3Name);
+                if(File.Exists(thumbnailPath))
+                {
+                    File.Move(mp3Path, newMp3Path);
+                }
+
+                video.Mp3FileName = mp3Name;
+            }
+            
+
             video.FileName = newName;
             video.ThumbnailName = newThumbnailName;
 
@@ -204,6 +239,36 @@ namespace YT_DLP_Web_App_Backend.Services
             }
 
             return false;
+        }
+
+        public async Task DownloadSavedVideo(int videoId)
+        {
+            Video? video = await videoDbContext.Videos.FirstOrDefaultAsync(x => x.Id == videoId);
+
+            if(video == null)
+            {
+                return;
+            }
+
+            string videoPath = Path.Join(AppConstants.DefaultDownloadDir, video.FileName);
+            if(File.Exists(videoPath))
+            {
+                File.Delete(videoPath);
+            }
+
+            string thumbnailPath = Path.Join(AppConstants.DefaultDownloadDir, video.FileName);
+            if(!string.IsNullOrEmpty(video.ThumbnailName) && File.Exists(thumbnailPath))
+            {
+                File.Delete(thumbnailPath);
+            }
+
+            string mp3Path = Path.Join(AppConstants.DefaultDownloadDir, video.Mp3FileName);
+            if(!string.IsNullOrEmpty(video.Mp3FileName) && File.Exists(mp3Path))
+            {
+                File.Delete(mp3Path);
+            }
+
+            await ytDlpService.DownloadVideoAsync(video.Url, video.FileName.TrimEnd(Path.GetExtension(video.FileName)), video.Id, null);
         }
 
         public bool VideoFileExists(string videoName)

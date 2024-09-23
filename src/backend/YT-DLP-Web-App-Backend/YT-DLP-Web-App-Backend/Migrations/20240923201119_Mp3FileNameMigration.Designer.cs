@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using YT_DLP_Web_App_Backend.Database;
 
@@ -10,9 +11,11 @@ using YT_DLP_Web_App_Backend.Database;
 namespace YT_DLP_Web_App_Backend.Migrations
 {
     [DbContext(typeof(VideoDbContext))]
-    partial class VideoDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240923201119_Mp3FileNameMigration")]
+    partial class Mp3FileNameMigration
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.8");

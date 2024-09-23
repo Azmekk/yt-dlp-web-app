@@ -1,3 +1,5 @@
+using Hangfire;
+using Hangfire.MemoryStorage;
 using Microsoft.AspNetCore.Cors;
 using Microsoft.EntityFrameworkCore;
 using YT_DLP_Web_App_Backend.Constants;
@@ -32,6 +34,11 @@ namespace YT_DLP_Web_App_Backend
 
             var app = builder.Build();
 
+            await SetupApp(app);
+        }
+
+        private static async Task SetupApp(WebApplication app)
+        {
             if(app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
@@ -71,6 +78,10 @@ namespace YT_DLP_Web_App_Backend
 
         private static void AddServices(WebApplicationBuilder builder)
         {
+            builder.Services.AddHangfire(config =>
+                 config.UseMemoryStorage());
+            builder.Services.AddHangfireServer();
+
             builder.Services.AddDbContext<VideoDbContext>(options =>
             {
                 options.UseSqlite($"Data Source={AppConstants.SqliteFilePath}");

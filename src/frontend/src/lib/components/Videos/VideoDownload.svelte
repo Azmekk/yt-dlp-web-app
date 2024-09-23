@@ -151,7 +151,7 @@
 </script>
 
 <div class="fixed bottom-10 md:bottom-20 right-2 md:right-10 p-4 z-10">
-	<Button class="text-slate-100" size="lg" on:click={() => (downloadVideoDialogOpen = true)} icon={mdiPlus} rounded="full" variant="fill" color="primary" > New video</Button>
+	<Button class="text-slate-100" size="lg" on:click={() => (downloadVideoDialogOpen = true)} icon={mdiPlus} rounded="full" variant="fill" color="primary" ></Button>
 </div>
 
 <div class="w-full absolute">

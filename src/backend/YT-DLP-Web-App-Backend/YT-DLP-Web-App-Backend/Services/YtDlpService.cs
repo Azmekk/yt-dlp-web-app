@@ -79,11 +79,9 @@ namespace YT_DLP_Web_App_Backend.Services
             return runResult.Data;
         }
 
-        public async Task DownloadVideoAsync(string url, string videoName, VideoDimensions? dimensions, CancellationToken cancellationToken = default)
+        public async Task DownloadVideoAsync(string url, string videoName, int videoId, VideoDimensions? dimensions, CancellationToken cancellationToken = default)
         {
-            string filename = videoName + ".mp4";
-            Video videoRecord = await videosService.CreateInitialVideoRecord(url, filename);
-
+            Video? videoRecord = await videoDbContext.Videos.FirstOrDefaultAsync(x => x.Id == videoId) ?? throw new Exception("No existing video record found when attempting to download the video.");
             try
             {
                 if(!Uri.IsWellFormedUriString(url, UriKind.Absolute))
@@ -133,7 +131,7 @@ namespace YT_DLP_Web_App_Backend.Services
                     throw new Exception(errorString);
                 }
 
-                string finalFilePath = Path.Join(AppConstants.DefaultDownloadDir, filename);
+                string finalFilePath = Path.Join(AppConstants.DefaultDownloadDir, videoRecord.FileName);
                 videoRecord.Downloaded = true;
                 videoRecord.ThumbnailName = videoName + ".jpg";
                 videoRecord.Size = new FileInfo(finalFilePath).Length;
@@ -144,7 +142,7 @@ namespace YT_DLP_Web_App_Backend.Services
             }
             catch(Exception ex)
             {
-                string finalFilePath = Path.Join(AppConstants.DefaultDownloadDir, filename);
+                string finalFilePath = Path.Join(AppConstants.DefaultDownloadDir, videoRecord.FileName);
                 string finalThumbnailPath = Path.Join(AppConstants.DefaultDownloadDir, videoName + ".jpg");
 
                 if(File.Exists(finalFilePath))

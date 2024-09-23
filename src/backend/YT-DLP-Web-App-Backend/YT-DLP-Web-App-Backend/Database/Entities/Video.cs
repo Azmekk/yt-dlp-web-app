@@ -11,6 +11,7 @@ namespace YT_DLP_Web_App_Backend.Database.Entities
         public DateTime UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
         public string FileName { get; set; }
+        public string? Mp3FileName { get; set; }
         public string ThumbnailName { get; set; }
         public long Size { get; set; }
         public string Url { get; set; }

@@ -54,6 +54,12 @@ export interface Video {
      * @type {string}
      * @memberof Video
      */
+    mp3FileName?: string | null;
+    /**
+     * 
+     * @type {string}
+     * @memberof Video
+     */
     thumbnailName?: string | null;
     /**
      * 
@@ -97,6 +103,7 @@ export function VideoFromJSONTyped(json: any, ignoreDiscriminator: boolean): Vid
         'updatedAt': json['updatedAt'] == null ? undefined : (new Date(json['updatedAt'])),
         'deletedAt': json['deletedAt'] == null ? undefined : (new Date(json['deletedAt'])),
         'fileName': json['fileName'] == null ? undefined : json['fileName'],
+        'mp3FileName': json['mp3FileName'] == null ? undefined : json['mp3FileName'],
         'thumbnailName': json['thumbnailName'] == null ? undefined : json['thumbnailName'],
         'size': json['size'] == null ? undefined : json['size'],
         'url': json['url'] == null ? undefined : json['url'],
@@ -115,6 +122,7 @@ export function VideoToJSON(value?: Video | null): any {
         'updatedAt': value['updatedAt'] == null ? undefined : ((value['updatedAt']).toISOString()),
         'deletedAt': value['deletedAt'] == null ? undefined : ((value['deletedAt'] as any).toISOString()),
         'fileName': value['fileName'],
+        'mp3FileName': value['mp3FileName'],
         'thumbnailName': value['thumbnailName'],
         'size': value['size'],
         'url': value['url'],

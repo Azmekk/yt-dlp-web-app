@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
+﻿using Hangfire;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using System.ComponentModel.DataAnnotations;
@@ -17,43 +18,31 @@ namespace YT_DLP_Web_App_Backend.Controllers
     public class VideosController(VideosService videosService, YtDlpService ytDlpService) : Controller
     {
         [HttpPost]
-        [SwaggerResponse((int) HttpStatusCode.OK)]
+        [SwaggerResponse((int)HttpStatusCode.OK)]
         [SwaggerResponse((int)HttpStatusCode.BadRequest)]
         public async Task<ActionResult> SaveVideo([FromBody] SaveVideoRequest request)
         {
-            var proceedWithDownload = true;
-            try
+
+            if(request.VideoName.Any(x => Path.GetInvalidFileNameChars().Contains(x)))
             {
-                if(request.VideoName.Any(x => Path.GetInvalidFileNameChars().Contains(x)))
-                {
-                    proceedWithDownload = false;
-                    return BadRequest("Videoname contains invalid characters");
-                }
-
-                if(await videosService.VideoExists(request.VideoUrl))
-                {
-                    proceedWithDownload = false;
-                    return BadRequest("Video already exists");
-                }
-
-                if(videosService.VideoFileExists(request.VideoName + ".mp4"))
-                {
-                    proceedWithDownload = false;
-                    return BadRequest("A file with that name already exists");
-                }
-
-                return Ok();
+                return BadRequest("Videoname contains invalid characters");
             }
-            finally
+
+            if(await videosService.VideoExists(request.VideoUrl))
             {
-                Response.OnCompleted(async () =>
-                {
-                    if(proceedWithDownload)
-                    {
-                        await ytDlpService.DownloadVideoAsync(request.VideoUrl, request.VideoName, request.VideoDimensions);
-                    }
-                });
+                return BadRequest("Video already exists");
             }
+
+            if(videosService.VideoFileExists(request.VideoName + ".mp4"))
+            {
+                return BadRequest("A file with that name already exists");
+            }
+
+            //Create video record so it exists on returned request.
+            Video video = await videosService.CreateInitialVideoRecord(request.VideoUrl, request.VideoName + ".mp4");
+            BackgroundJob.Enqueue(() => ytDlpService.DownloadVideoAsync(request.VideoUrl, request.VideoName, video.Id, request.VideoDimensions, default));
+
+            return Ok();
         }
 
         [HttpGet]
@@ -102,8 +91,14 @@ namespace YT_DLP_Web_App_Backend.Controllers
 
         [HttpGet]
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(VideoNameResponse))]
+        [SwaggerResponse((int)HttpStatusCode.BadRequest)]
         public async Task<ActionResult<VideoNameResponse>> GetName(string videoUrl)
         {
+            if(!Uri.IsWellFormedUriString(videoUrl, UriKind.Absolute))
+            {
+                return BadRequest($"Invalid url {videoUrl}");
+            }
+
             YoutubeDLSharp.Metadata.VideoData videoData = await ytDlpService.GetVideoDataAsync(videoUrl);
 
             return Ok(new VideoNameResponse { Name = videoData.Title });
@@ -122,18 +117,17 @@ namespace YT_DLP_Web_App_Backend.Controllers
         [SwaggerResponse((int)HttpStatusCode.OK)]
         [SwaggerResponse((int)HttpStatusCode.NotFound)]
         [SwaggerResponse((int)HttpStatusCode.InternalServerError)]
-        public async Task<ActionResult> GetMp3([Required] string videoName)
+        public async Task<ActionResult> GetMp3([Required] int videoId)
         {
             try
             {
-                byte[]? fileBytes = await videosService.ExtractMp3(videoName);
+                (byte[]? fileBytes, string? mp3Name) = await videosService.ExtractMp3(videoId);
                 if(fileBytes == null || fileBytes.Length == 0)
                 {
                     return NotFound();
                 }
 
-                string mp3Name = videoName.TrimEnd(Path.GetExtension(videoName)) + ".mp3";
-                return File(fileBytes, "audio/mp3", mp3Name);
+                return File(fileBytes, "audio/mp3", mp3Name ?? "audio.mp3");
             }
             catch(Exception ex)
             {

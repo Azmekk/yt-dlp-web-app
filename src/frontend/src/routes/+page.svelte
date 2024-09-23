@@ -7,17 +7,21 @@
 	import { mdiCloseCircleOutline } from '@mdi/js';
 	import { onDestroy, onMount } from 'svelte';
 	import { Icon, Notification, ProgressCircle } from 'svelte-ux';
-	import { type Video } from "$lib/api-clients/backend-client/models/Video"
-	import { VideoOrderBy } from "$lib/index"
-	import { StorageApi, VideosApi, type ApiVideosListVideosGetRequest } from '$lib/api-clients/backend-client/apis/index';
-	import { type VideoCountResponse } from "$lib/api-clients/backend-client/models"
+	import { type Video } from '$lib/api-clients/backend-client/models/Video';
+	import { VideoOrderBy } from '$lib/index';
+	import {
+		StorageApi,
+		VideosApi,
+		type ApiVideosListVideosGetRequest
+	} from '$lib/api-clients/backend-client/apis/index';
+	import { VideoDownloadInfoFromJSONTyped, VideoDownloadInfoToJSON, type VideoCountResponse } from '$lib/api-clients/backend-client/models';
 	import { WebSocketService, type VideoDownloadInfo } from '$lib/websocketService';
 	import { BASE_PATH, BaseAPI } from '$lib/api-clients/backend-client';
 	import { url } from 'svelte-ux/utils/routing';
 
-	interface VodeoDownloadInfo{
-		videoId: number,
-		downloadPercent: number
+	interface VodeoDownloadInfo {
+		videoId: number;
+		downloadPercent: number;
 	}
 	let videosInProgress: VodeoDownloadInfo[] = [];
 
@@ -54,9 +58,10 @@
 	let orderByDescending: boolean = true;
 	let videoSearch: string = '';
 	async function getVideosAsync() {
+		videosInProgress = [];
 		let videosApi = new VideosApi();
-		let videosResult : Video[] | null = null;
-		let totalVideosAmountResult : VideoCountResponse | null = null;
+		let videosResult: Video[] | null = null;
+		let totalVideosAmountResult: VideoCountResponse | null = null;
 
 		try {
 			const request: ApiVideosListVideosGetRequest = {
@@ -65,16 +70,16 @@
 				orderBy: orderByFilter,
 				descending: orderByDescending,
 				search: videoSearch
-			}
+			};
 			videosResult = await videosApi.apiVideosListVideosGet(request);
 			totalVideosAmountResult = await videosApi.apiVideosGetVideoCountGet();
 
-			videosResult.forEach(element => {
-				if (!element.downloaded && element.id) {
-					videosApi.apiVideosGetVideoDownloadInfoGet({videoId: element.id})
+			videosResult.forEach(async (x) => {
+				if (!x.downloaded && x.id) {
+					var downloadInfo = await videosApi.apiVideosGetVideoDownloadInfoGet({videoId: x.id})
+					videosInProgress = [...videosInProgress, { videoId: x.id, downloadPercent: downloadInfo.downloadPercent ?? 0 }];
 				}
 			});
-
 		} catch (error) {
 			console.log('Failed to fetch videos. Error: ' + error);
 			showErrorDialog('Fetch error', 'Failed to fetch videos.');
@@ -142,36 +147,41 @@
 	let webSocketService: WebSocketService;
 
 	async function handleIncomingSocketMessage(message: string): Promise<void> {
-        let videoDownloadInfo: VideoDownloadInfo = JSON.parse(message)
+		let videoDownloadInfo: VideoDownloadInfo = JSON.parse(message);
 
 		if (videoDownloadInfo.downloaded) {
 			await updateVideoInfoAsync();
 			return;
 		}
 
-		let video = videos.find(x => x.id == videoDownloadInfo.videoId);
-		if (video != undefined) {
-			video.downloaded 
-		}
-    }
+		videosInProgress.forEach(x => {
+			if (x.videoId == videoDownloadInfo.videoId) {
+				x.downloadPercent = videoDownloadInfo.downloadPercent
+			}
+		})
+
+		videosInProgress = [...videosInProgress];
+	}
 
 	function renewSocket(): void {
-        webSocketService.sendMessage("renew");
-    }
+		webSocketService.sendMessage('renew');
+	}
 
 	onMount(async () => {
 		await updateVideoInfoAsync();
 
 		let baseUrl = new URL(BASE_PATH);
-		webSocketService = new WebSocketService(`ws://${baseUrl.hostname + ":" +  baseUrl.port + "/ws"}`, handleIncomingSocketMessage);
-		webSocketService.connect();location
+		webSocketService = new WebSocketService(
+			`ws://${baseUrl.hostname + ':' + baseUrl.port + '/ws'}`,
+			handleIncomingSocketMessage
+		);
+		webSocketService.connect();
+		location;
 
 		interval = setInterval(renewSocket, 10000);
 	});
 
-	onDestroy(async () => {
-
-	});
+	onDestroy(async () => {});
 </script>
 
 <svelte:window bind:innerWidth bind:innerHeight />
@@ -201,7 +211,11 @@
 						</p>
 					{/if}
 					{#each videos as video (video.id)}
-						<VideoView on:videoDeleted={async () => await updateVideoInfoAsync()} bind:video />
+						<VideoView
+							on:videoDeleted={async () => await updateVideoInfoAsync()}
+							bind:video
+							downloadPercent={videosInProgress.find((x) => x.videoId === video.id)?.downloadPercent ?? 1}
+						/>
 					{/each}
 				</div>
 			</div>
@@ -209,7 +223,7 @@
 			<div class="mb-2 mt-auto flex justify-center">
 				<Pagination
 					on:pageUpdated={updateVideoInfoAsync}
-					bind:currentPage={currentPage}
+					bind:currentPage
 					bind:total={videoCount}
 					bind:perPage={videosPerPage}
 				/>
@@ -226,6 +240,6 @@
 					<div slot="description">{errorMessage}</div>
 				</Notification>
 			</div>
-		</div>		
+		</div>
 	{/if}
 </main>

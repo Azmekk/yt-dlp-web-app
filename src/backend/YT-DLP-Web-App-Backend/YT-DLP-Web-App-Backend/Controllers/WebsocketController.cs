@@ -25,6 +25,7 @@ namespace YT_DLP_Web_App_Backend.Controllers
                 {
                     if(webSocket.State == WebSocketState.Open)
                     {
+                        //Wrapper because otherwise messages get polled for some reason.
                         _ = Task.Run(async () =>
                         {
                             await webSocket.SendAsync(
@@ -57,8 +58,7 @@ namespace YT_DLP_Web_App_Backend.Controllers
                         string message = System.Text.Encoding.UTF8.GetString(receivedBytes);
                         if(message.Equals("renew", StringComparison.CurrentCultureIgnoreCase))
                         {
-                            cts.Dispose();
-                            cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
+                            cts.CancelAfter(TimeSpan.FromMinutes(5));
                         }
                     }
                 }
