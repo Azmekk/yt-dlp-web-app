@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { BASE_PATH, VideosApi, type Video } from '$lib/api-clients/backend-client';
 	import { formatBytes, formatDate } from '$lib/utils';
 	import {
 		mdiCancel,
@@ -13,9 +14,11 @@
 
 	const dispatch = createEventDispatcher();
 
-	export let video: ApiVideoResponse;
+	export let video: Video;
+	export let downloadPercent = 0;
 	let thumbnailUrl = '';
 	let videoUrl = '';
+	let mp3Url = '';
 
 	let innerWidth: number, innerHeight: number;
 
@@ -25,8 +28,9 @@
 	let deleteButtonLoading = false;
 	async function deleteVideoAsync() {
 		deleteButtonLoading = true;
+		let videosApi = new VideosApi();
 		try {
-			await client_deleteVideo(video.id);
+			await videosApi.apiVideosDeleteVideoDelete({videoId: video.id ?? -1});
 			dispatch('videoDeleted');
 		} catch (error) {
 			console.log('Failed to delete video: ', error);
@@ -39,16 +43,16 @@
 	let newName = '';
 	let editButtonLoading = false;
 	async function updateVideoNameAsync() {
-		if (newName == '' || newName == video.name) {
+		if (newName == '' || newName == video.fileName) {
 			console.error('New name is empty.');
 			return;
 		}
 
 		editButtonLoading = true;
-
+		let videosApi = new VideosApi();
 		try {
-			await renameVideoAsync(video.id, newName);
-            video.name = newName;
+			await videosApi.apiVideosUpdateVideoNamePatch({updateVideoNameRequest: {videoId: video.id, newName}});
+            video.fileName = newName;
 			dispatch('videoModified');
             clearNameEditInputs();
 		} catch (error) {
@@ -60,21 +64,55 @@
 
     function clearNameEditInputs(){
         editingName = false;
-        newName = video.name;
+        newName = video.fileName ?? "";
         editButtonLoading = false;
     }
 
-	onMount(() => {
+	onMount(async () => {
 		if (video.thumbnailName !== '') {
-			thumbnailUrl = getThumbnailPath(video.id);
+			thumbnailUrl = BASE_PATH + "/api/videos/GetThumbnail?thumbnailName=" + video.thumbnailName
 		}
-		videoUrl = getVideoPath(video.id);
+		videoUrl = BASE_PATH + "/api/videos/Getvideo?videoName=" + video.fileName
+		mp3Url = BASE_PATH + "/api/videos/GetMp3?videoName=" + video.fileName
+
 
 		videoWidth = 480 > innerWidth ? innerWidth : 480;
 		videoHeight = videoWidth * (9 / 16);
 
-		newName = video.name;
+		newName = video.fileName ?? "";
 	});
+
+	async function downloadResource(resourceUrl: string, name = "") {
+    try {
+        const response = await fetch(resourceUrl);
+        const blob = await response.blob();
+
+        const link = document.createElement("a");
+        link.download = name;
+        link.href = URL.createObjectURL(blob);
+        
+        link.click();
+
+        URL.revokeObjectURL(link.href);
+    } catch (error) {
+        console.error("Error downloading resource:", error);
+    }
+}
+
+	let downloadMp3Loading = false;
+	let downloadVideoLoading = false;
+
+	async function downloadMp3(url: string, name = ""){
+		downloadMp3Loading = true;
+		await downloadResource(url, name)
+		downloadMp3Loading = false;
+	}
+
+	async function downloadvideo(url: string, name = ""){
+		downloadVideoLoading = true;
+		await downloadResource(url, name)
+		downloadVideoLoading = false;
+	}
 
 	let dialogDeleteOpen = false;
 </script>
@@ -92,11 +130,11 @@
 		>
 			<ProgressCircle size={64} class="text-black dark:text-white" />
 			<h2 class="overflow-ellipsis overflow-hidden whitespace-nowrap text-xl font-bold mb-2">
-				Downloading: {video.downloadPercent}%
+				Downloading: {downloadPercent}%
 			</h2>
 		</div>
 		<div class="w-full">
-			<Progress value={video.downloadPercent} max={100} />
+			<Progress value={downloadPercent} max={100} />
 		</div>
 	{:else}
 		<div style="width: {videoWidth}px; height: {videoHeight}px;">
@@ -141,7 +179,7 @@
 					</div>
 				{:else}
 					<h2 class="overflow-ellipsis overflow-hidden whitespace-nowrap text-xl font-bold mb-2">
-						{video.name}
+						{video.fileName}
 					</h2>
 					<Button
 						on:click={() => (editingName = true)}
@@ -152,31 +190,30 @@
 				{/if}
 			</div>
 
-			<p class="text-sm">Downloaded: {formatDate(video.creation_time)}</p>
+			<p class="text-sm">Downloaded: {formatDate(video.createdAt?.toString() ?? "")}</p>
 			<p class="text-sm">
-				Size: {video.downloaded ? formatBytes(video.size) : 'Awaiting completion'}
+				Size: {video.downloaded ? formatBytes(video.size ?? 0) : 'Awaiting completion'}
 			</p>
 		</div>
 		<div class="flex mt-4 gap-1 justify-center md:justify-normal">
-			<a download href={getMp3DownloadPath(video.id)}>
 				<Button
 					disabled={!video.downloaded}
 					variant={'fill'}
 					color="accent"
 					icon={mdiDownload}
 					class="text-slate-100"
-					rounded>Mp3</Button
+					loading={downloadMp3Loading}
+					on:click={async () => await downloadMp3(mp3Url, video.fileName?.replace(".mp4", ".mp3"))}>Mp3</Button
 				>
-			</a>
-			<a download href={getDownloadVideoPath(video.id)}>
 				<Button
 					disabled={!video.downloaded}
 					variant={'fill'}
 					color="success"
 					icon={mdiDownload}
-					class="text-slate-100">Download</Button
+					class="text-slate-100"
+					loading={downloadVideoLoading}
+					on:click={async () => await downloadvideo(videoUrl, video.fileName ?? "")}>Download</Button
 				>
-			</a>
 			<Button
 				disabled={!video.downloaded}
 				variant={'fill'}

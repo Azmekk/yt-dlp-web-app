@@ -40,33 +40,28 @@ namespace YT_DLP_Web_App_Backend.Controllers
 
                 var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
 
-                await Task.Run(async () =>
+                while(webSocket.State != WebSocketState.Closed && webSocket.State != WebSocketState.Aborted)
                 {
-                    while(webSocket.State != WebSocketState.Closed && webSocket.State != WebSocketState.Aborted)
+                    var receivedBytes = new byte[1024];
+                    try
                     {
-                        var receivedBytes = new byte[1024];
-                        try
-                        {
-                            await webSocket.ReceiveAsync(receivedBytes, cts.Token);
-                        }
-                        catch(Exception)
-                        {
-                            break;
-                        }
+                        var result = await webSocket.ReceiveAsync(receivedBytes, cts.Token);
+                    }
+                    catch(Exception)
+                    {
+                        break;
+                    }
 
-
-                        if(receivedBytes.Length > 0)
+                    if(receivedBytes.Length > 0)
+                    {
+                        string message = System.Text.Encoding.UTF8.GetString(receivedBytes);
+                        if(message.Equals("renew", StringComparison.CurrentCultureIgnoreCase))
                         {
-                            string message = System.Text.Encoding.UTF8.GetString(receivedBytes);
-                            if(message.Equals("renew", StringComparison.CurrentCultureIgnoreCase))
-                            {
-                                cts.Dispose();
-                                cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
-                            }
+                            cts.Dispose();
+                            cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
                         }
                     }
-                }, cts.Token);
-
+                }
 
                 if(webSocket.State == WebSocketState.Open)
                 {

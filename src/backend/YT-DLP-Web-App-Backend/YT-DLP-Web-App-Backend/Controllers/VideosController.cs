@@ -1,8 +1,12 @@
 ﻿using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 using System.ComponentModel.DataAnnotations;
+using System.Net;
 using System.Net.Mime;
+using YT_DLP_Web_App_Backend.Constants;
 using YT_DLP_Web_App_Backend.Database.Entities;
+using YT_DLP_Web_App_Backend.DataObjects;
 using YT_DLP_Web_App_Backend.DataObjects.Requests;
 using YT_DLP_Web_App_Backend.DataObjects.Responses;
 using YT_DLP_Web_App_Backend.Services;
@@ -13,6 +17,8 @@ namespace YT_DLP_Web_App_Backend.Controllers
     public class VideosController(VideosService videosService, YtDlpService ytDlpService) : Controller
     {
         [HttpPost]
+        [SwaggerResponse((int) HttpStatusCode.OK)]
+        [SwaggerResponse((int)HttpStatusCode.BadRequest)]
         public async Task<ActionResult> SaveVideo([FromBody] SaveVideoRequest request)
         {
             var proceedWithDownload = true;
@@ -51,44 +57,51 @@ namespace YT_DLP_Web_App_Backend.Controllers
         }
 
         [HttpGet]
+        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(List<Video>))]
         public async Task<ActionResult<List<Video>>> ListVideos([Required] int take, [Required] int page, OrderVideosBy orderBy = OrderVideosBy.CreationDate, bool descending = true, string search = "")
         {
             return Ok(await videosService.GetVideosAsync(take, page, orderBy, descending, search));
         }
 
         [HttpGet]
+        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(VideoCountResponse))]
         public async Task<ActionResult<VideoCountResponse>> GetVideoCount()
         {
             return Ok(new VideoCountResponse { Count = await videosService.GetVideoCount() });
         }
 
         [HttpGet]
-        public ActionResult GetVideo([Required] string videoName)
+        [SwaggerResponse((int)HttpStatusCode.NotFound)]
+        [SwaggerResponse((int)HttpStatusCode.OK)]
+        public async Task<ActionResult> GetVideo([Required] string videoName)
         {
-            FileStream? fs = videosService.GetFileFromDownloadDir(videoName);
+            byte[]? fileBytes = await videosService.GetFileFromDownloadDir(videoName);
 
-            if(fs == null)
+            if(fileBytes == null || fileBytes.Length == 0)
             {
                 return NotFound();
             }
 
-            return File(fs, "video/mp4", videoName);
+            return File(fileBytes, "video/mp4", videoName);
         }
 
         [HttpGet]
-        public ActionResult GetThumbnail([Required] string thumbnailName)
+        [SwaggerResponse((int)HttpStatusCode.OK)]
+        [SwaggerResponse((int)HttpStatusCode.NotFound)]
+        public async Task<ActionResult> GetThumbnail([Required] string thumbnailName)
         {
-            FileStream? fs = videosService.GetFileFromDownloadDir(thumbnailName);
+            byte[]? fileBytes = await videosService.GetFileFromDownloadDir(thumbnailName);
 
-            if(fs == null)
+            if(fileBytes == null || fileBytes.Length == 0)
             {
                 return NotFound();
             }
 
-            return File(fs, "image/jpg", thumbnailName);
+            return File(fileBytes, "image/jpg", thumbnailName);
         }
 
         [HttpGet]
+        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(VideoNameResponse))]
         public async Task<ActionResult<VideoNameResponse>> GetName(string videoUrl)
         {
             YoutubeDLSharp.Metadata.VideoData videoData = await ytDlpService.GetVideoDataAsync(videoUrl);
@@ -97,7 +110,8 @@ namespace YT_DLP_Web_App_Backend.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<VideoNameResponse>> GetMaxDimensions(string videoUrl)
+        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(VideoDimensions))]
+        public async Task<ActionResult<VideoDimensions>> GetMaxDimensions(string videoUrl)
         {
             DataObjects.VideoDimensions videoDimensions = await ytDlpService.GetMaxVideoResolutionAsync(videoUrl);
 
@@ -105,27 +119,33 @@ namespace YT_DLP_Web_App_Backend.Controllers
         }
 
         [HttpGet]
+        [SwaggerResponse((int)HttpStatusCode.OK)]
+        [SwaggerResponse((int)HttpStatusCode.NotFound)]
+        [SwaggerResponse((int)HttpStatusCode.InternalServerError)]
         public async Task<ActionResult> GetMp3([Required] string videoName)
         {
             try
             {
-                FileStream? fs = await videosService.ExtractMp3(videoName);
-                if(fs == null)
+                byte[]? fileBytes = await videosService.ExtractMp3(videoName);
+                if(fileBytes == null || fileBytes.Length == 0)
                 {
                     return NotFound();
                 }
 
                 string mp3Name = videoName.TrimEnd(Path.GetExtension(videoName)) + ".mp3";
-                return File(fs, "audio/mp3", mp3Name);
+                return File(fileBytes, "audio/mp3", mp3Name);
             }
-            catch(Exception)
+            catch(Exception ex)
             {
+                Console.WriteLine(ex);
                 return StatusCode(500, "An unexpected error occurred when converting to mp3.");
             }
         }
 
 
         [HttpDelete]
+        [SwaggerResponse((int)HttpStatusCode.OK)]
+        [SwaggerResponse((int)HttpStatusCode.InternalServerError)]
         public async Task<ActionResult> DeleteVideo([Required] int videoId)
         {
             try
@@ -140,6 +160,9 @@ namespace YT_DLP_Web_App_Backend.Controllers
         }
 
         [HttpPatch]
+        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(Video))]
+        [SwaggerResponse((int)HttpStatusCode.NotFound)]
+        [SwaggerResponse((int)HttpStatusCode.BadRequest)]
         public async Task<ActionResult<Video>> UpdateVideoName([FromBody] UpdateVideoNameRequest updateNameRequest)
         {
             if(updateNameRequest.NewName.Any(x => Path.GetInvalidFileNameChars().Contains(x)))
@@ -158,6 +181,8 @@ namespace YT_DLP_Web_App_Backend.Controllers
         }
 
         [HttpGet]
+        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(Video))]
+        [SwaggerResponse((int)HttpStatusCode.NotFound)]
         public async Task<ActionResult<Video>> GetVideoInfo([Required] int videoId)
         {
             Video? video = await videosService.GetVideoById(videoId);
@@ -168,6 +193,21 @@ namespace YT_DLP_Web_App_Backend.Controllers
             }
 
             return Ok(video);
+        }
+
+        [HttpGet]
+        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(VideoDownloadInfo))]
+        [SwaggerResponse((int)HttpStatusCode.NotFound)]
+        public ActionResult<VideoDownloadInfo> GetVideoDownloadInfo([Required] int videoId)
+        {
+            var result = VideosInProgressStorage.GetVideoInfo(videoId);
+
+            if(result == null)
+            {
+                return NotFound();
+            }
+
+            return Ok(result);
         }
     }
 }

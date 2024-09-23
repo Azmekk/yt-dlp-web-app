@@ -1,0 +1,51 @@
+export class WebSocketService {
+    private socket: WebSocket | null = null;
+    private url: string;
+    private onMessageCallback: (message: string) => Promise<void>;
+
+    constructor(url: string, onMessageCallback: (message: string) => Promise<void>) {
+        this.url = url;
+        this.onMessageCallback = onMessageCallback;
+    }
+
+    connect(): void {
+        this.socket = new WebSocket(this.url);
+
+        this.socket.onopen = () => {
+            console.log(`WebSocket connected to ${this.url}`);
+        };
+
+        this.socket.onmessage = async (event: MessageEvent) => {
+            // Handle incoming messages via the callback
+            await this.onMessageCallback(event.data);
+        };
+
+        this.socket.onerror = (error: Event) => {
+            console.error('WebSocket error:', error);
+        };
+
+        this.socket.onclose = (event: CloseEvent) => {
+            console.log(`WebSocket closed: ${event.reason}`);
+        };
+    }
+
+    sendMessage(message: string): void {
+        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+            this.socket.send(message);
+        } else {
+            console.error('WebSocket is not open');
+        }
+    }
+
+    close(): void {
+        if (this.socket) {
+            this.socket.close();
+        }
+    }
+}
+
+export interface VideoDownloadInfo {
+    videoId: number;
+    downloadPercent: number;
+    downloaded: boolean;
+}

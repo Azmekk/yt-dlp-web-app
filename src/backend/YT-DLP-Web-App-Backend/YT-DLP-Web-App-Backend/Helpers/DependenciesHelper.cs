@@ -6,76 +6,28 @@ namespace YT_DLP_Web_App_Backend.Helpers
     {
         const string DefaultYtDlpCommand = "yt-dlp";
         const string DefaultFfmpegCommand = "ffmpeg";
-        const string DefaultFfProbeCommand = "ffprobe";
 
         private static bool UseLocalExecutables { get; set; } = false;
-
-        static string ytDlpFullPath = "";
-        static string ffmpegFullPath = "";
-        static string ffprobeFullPath = "";
-        public static string YtDlpPath
-        {
-            get
-            {
-                if(UseLocalExecutables)
-                {
-                    return ytDlpFullPath;
-                }
-
-                return DefaultYtDlpCommand;
-            }
-        }
-
-        public static string FfmpegPath
-        {
-            get
-            {
-                if(UseLocalExecutables)
-                {
-                    return ffmpegFullPath;
-                }
-
-                return DefaultFfmpegCommand;
-            }
-        }
-
-        public static string FfprobePath
-        {
-            get
-            {
-                if(UseLocalExecutables)
-                {
-                    return ffprobeFullPath;
-                }
-
-                return DefaultFfProbeCommand;
-            }
-        }
+        public static string YtDlpPath { get; private set; } = DefaultYtDlpCommand;
+        public static string FfmpegPath { get; private set; } = DefaultFfmpegCommand;
 
         public static bool DepsPresentInExeDir()
         {
-            ytDlpFullPath = Path.Join(AppDomain.CurrentDomain.BaseDirectory, DefaultYtDlpCommand);
-            ffmpegFullPath = Path.Join(AppDomain.CurrentDomain.BaseDirectory, DefaultFfmpegCommand);
-            ffprobeFullPath = Path.Join(AppDomain.CurrentDomain.BaseDirectory, DefaultFfProbeCommand);
+            YtDlpPath = Path.Join(AppDomain.CurrentDomain.BaseDirectory, DefaultYtDlpCommand);
+            FfmpegPath = Path.Join(AppDomain.CurrentDomain.BaseDirectory, DefaultFfmpegCommand);
 
             if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                ytDlpFullPath += ".exe";
-                ffmpegFullPath += ".exe";
-                ffprobeFullPath += ".exe";
+                YtDlpPath += ".exe";
+                FfmpegPath += ".exe";
             }
 
-            if(!File.Exists(ytDlpFullPath))
+            if(!File.Exists(YtDlpPath))
             {
                 return false;
             }
 
-            if(!File.Exists(ffmpegFullPath))
-            {
-                return false;
-            }
-
-            if(!File.Exists(ffprobeFullPath))
+            if(!File.Exists(FfmpegPath))
             {
                 return false;
             }
@@ -85,19 +37,24 @@ namespace YT_DLP_Web_App_Backend.Helpers
 
         public static bool DepsPresentOnPath()
         {
-            if(!IsOnPath(DefaultYtDlpCommand))
+            if(!IsOnPath(DefaultYtDlpCommand, out string ytDlpFoundPath))
             {
                 return false;
             }
 
-            if(!IsOnPath(DefaultFfmpegCommand))
+            if(!IsOnPath(DefaultFfmpegCommand, out string ffmpegFoundPath))
             {
                 return false;
             }
 
-            if(!IsOnPath(DefaultFfProbeCommand))
+
+            YtDlpPath = Path.Join(ytDlpFoundPath, DefaultYtDlpCommand);
+            FfmpegPath = Path.Join(ffmpegFoundPath, DefaultFfmpegCommand);
+
+            if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                return false;
+                YtDlpPath += ".exe";
+                FfmpegPath += ".exe";
             }
 
             return true;
@@ -127,12 +84,16 @@ namespace YT_DLP_Web_App_Backend.Helpers
             return true;
         }
 
-        private static bool IsOnPath(string exeName)
+        private static bool IsOnPath(string exeName, out string fullPath)
         {
+            fullPath = String.Empty;
             string? paths = Environment.GetEnvironmentVariable("PATH");
 
             if(string.IsNullOrEmpty(paths))
+            {
                 return false;
+            }
+                
 
             char pathSeparator = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ';' : ':';
 
@@ -141,8 +102,15 @@ namespace YT_DLP_Web_App_Backend.Helpers
                 exeName += ".exe";
             }
 
-            return paths.Split(pathSeparator).Any(
-                path => File.Exists(Path.Combine(path, exeName)));
+            var matchingPath = paths.Split(pathSeparator).FirstOrDefault(path => File.Exists(Path.Combine(path, exeName)));
+
+            if(matchingPath == null)
+            {
+                return false;
+            }
+
+            fullPath = matchingPath;
+            return true;
         }
     }
 }

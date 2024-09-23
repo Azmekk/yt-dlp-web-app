@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Cors;
 using Microsoft.EntityFrameworkCore;
 using YT_DLP_Web_App_Backend.Constants;
 using YT_DLP_Web_App_Backend.Database;
@@ -27,6 +28,7 @@ namespace YT_DLP_Web_App_Backend
             builder.Services.AddSwaggerGen();
 
             AddServices(builder);
+            SetupCors(builder);
 
             var app = builder.Build();
 
@@ -49,7 +51,7 @@ namespace YT_DLP_Web_App_Backend
             };
 
             app.UseWebSockets(webSocketOptions);
-
+            app.UseCors("Default");
             app.Run();
         }
 
@@ -83,6 +85,29 @@ namespace YT_DLP_Web_App_Backend
             using var scope = app.Services.CreateScope();
             VideoDbContext dbContext = scope.ServiceProvider.GetRequiredService<VideoDbContext>();
             await dbContext.Database.MigrateAsync();
+        }
+
+        private static void SetupCors(WebApplicationBuilder builder)
+        {
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy(name: "Default",
+                                  policy =>
+                                  {
+#if DEBUG
+                                      policy.AllowCredentials();
+                                      policy.WithOrigins("http://localhost:5173", "https://localhost:5173", "localhost:5173")
+                                      .AllowAnyHeader()
+                                      .AllowAnyMethod()
+                                      .WithExposedHeaders();
+#else
+                                      policy.AllowCredentials();
+                                      policy.WithOrigins("http://localhost:41001", "https://localhost:41001")
+                                      .AllowAnyHeader()
+                                      .AllowAnyMethod();
+#endif
+                                  });
+            });
         }
     }
 }

@@ -1,5 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using FFmpeg.NET;
+using FFmpeg.NET.Enums;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.VisualBasic;
 using System;
 using System.Diagnostics;
 using System.Security.Cryptography.X509Certificates;
@@ -122,7 +125,7 @@ namespace YT_DLP_Web_App_Backend.Services
             await videoDbContext.SaveChangesAsync();
         }
 
-        public FileStream? GetFileFromDownloadDir(string name)
+        public async Task<byte[]?> GetFileFromDownloadDir(string name)
         {
             var filePath = Path.Join(AppConstants.DefaultDownloadDir, name);
 
@@ -131,10 +134,10 @@ namespace YT_DLP_Web_App_Backend.Services
                 return null;
             }
 
-            return File.OpenRead(filePath);
+            return await File.ReadAllBytesAsync(filePath);
         }
 
-        public async Task<FileStream?> ExtractMp3(string videoName)
+        public async Task<byte[]?> ExtractMp3(string videoName)
         {
             string videoNameNoExtension = videoName.TrimEnd(Path.GetExtension(videoName));
             string mp3Name = videoNameNoExtension + ".mp3";
@@ -142,34 +145,19 @@ namespace YT_DLP_Web_App_Backend.Services
             string mp3Path = Path.Join(AppConstants.DefaultDownloadDir, mp3Name);
             if(File.Exists(mp3Path))
             {
-                return File.OpenRead(mp3Path);
+                return await File.ReadAllBytesAsync(mp3Path);
             }
 
             string videoPath = Path.Join(AppConstants.DefaultDownloadDir, videoName);
-            var ffmpegArguments = $"-i \"{videoPath}\" -q:a 0 -map a \"{mp3Path}\"";
-
-            var processStartInfo = new ProcessStartInfo
+            if(!File.Exists(videoPath))
             {
-                FileName = DependenciesHelper.FfmpegPath,
-                Arguments = ffmpegArguments,
-                RedirectStandardOutput = true,
-                RedirectStandardError = true,
-                UseShellExecute = false,
-                CreateNoWindow = true,
-            };
-
-            using var process = Process.Start(processStartInfo);
-
-            if(process == null)
-            {
-                throw new Exception("Ffmpeg process was null.");
+                return null;
             }
 
-            await process.WaitForExitAsync();
-            string stdOut = await process.StandardOutput.ReadToEndAsync();
-            string stdErr = await process.StandardError.ReadToEndAsync();
+            Engine ffmpeg = new(DependenciesHelper.FfmpegPath);
+            await ffmpeg.ExecuteAsync($"-i \"{videoPath}\" -q:a 0 -map 0:a \"{mp3Path}\"", default);
 
-            return File.OpenRead(mp3Path);
+            return await File.ReadAllBytesAsync(mp3Path);
         }
 
         public async Task<Video?> UpdateVideoName(int videoId, string newName)

@@ -20,6 +20,8 @@ import type {
   UpdateVideoNameRequest,
   Video,
   VideoCountResponse,
+  VideoDimensions,
+  VideoDownloadInfo,
   VideoNameResponse,
 } from '../models/index';
 import {
@@ -33,6 +35,10 @@ import {
     VideoToJSON,
     VideoCountResponseFromJSON,
     VideoCountResponseToJSON,
+    VideoDimensionsFromJSON,
+    VideoDimensionsToJSON,
+    VideoDownloadInfoFromJSON,
+    VideoDownloadInfoToJSON,
     VideoNameResponseFromJSON,
     VideoNameResponseToJSON,
 } from '../models/index';
@@ -55,6 +61,10 @@ export interface ApiVideosGetNameGetRequest {
 
 export interface ApiVideosGetThumbnailGetRequest {
     thumbnailName: string;
+}
+
+export interface ApiVideosGetVideoDownloadInfoGetRequest {
+    videoId: number;
 }
 
 export interface ApiVideosGetVideoGetRequest {
@@ -122,7 +132,7 @@ export class VideosApi extends runtime.BaseAPI {
 
     /**
      */
-    async apiVideosGetMaxDimensionsGetRaw(requestParameters: ApiVideosGetMaxDimensionsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<VideoNameResponse>> {
+    async apiVideosGetMaxDimensionsGetRaw(requestParameters: ApiVideosGetMaxDimensionsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<VideoDimensions>> {
         const queryParameters: any = {};
 
         if (requestParameters['videoUrl'] != null) {
@@ -138,12 +148,12 @@ export class VideosApi extends runtime.BaseAPI {
             query: queryParameters,
         }, initOverrides);
 
-        return new runtime.JSONApiResponse(response, (jsonValue) => VideoNameResponseFromJSON(jsonValue));
+        return new runtime.JSONApiResponse(response, (jsonValue) => VideoDimensionsFromJSON(jsonValue));
     }
 
     /**
      */
-    async apiVideosGetMaxDimensionsGet(requestParameters: ApiVideosGetMaxDimensionsGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<VideoNameResponse> {
+    async apiVideosGetMaxDimensionsGet(requestParameters: ApiVideosGetMaxDimensionsGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<VideoDimensions> {
         const response = await this.apiVideosGetMaxDimensionsGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
@@ -265,6 +275,41 @@ export class VideosApi extends runtime.BaseAPI {
      */
     async apiVideosGetVideoCountGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<VideoCountResponse> {
         const response = await this.apiVideosGetVideoCountGetRaw(initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async apiVideosGetVideoDownloadInfoGetRaw(requestParameters: ApiVideosGetVideoDownloadInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<VideoDownloadInfo>> {
+        if (requestParameters['videoId'] == null) {
+            throw new runtime.RequiredError(
+                'videoId',
+                'Required parameter "videoId" was null or undefined when calling apiVideosGetVideoDownloadInfoGet().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters['videoId'] != null) {
+            queryParameters['videoId'] = requestParameters['videoId'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/api/Videos/GetVideoDownloadInfo`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => VideoDownloadInfoFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async apiVideosGetVideoDownloadInfoGet(requestParameters: ApiVideosGetVideoDownloadInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<VideoDownloadInfo> {
+        const response = await this.apiVideosGetVideoDownloadInfoGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

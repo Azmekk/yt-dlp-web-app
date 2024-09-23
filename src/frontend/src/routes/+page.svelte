@@ -5,13 +5,26 @@
 	import { orderByDescendingStore, orderByStore, videoSearchStore } from '$lib/Stores/FilterStores';
 	import { usedStorageStore } from '$lib/Stores/UsedStorageStore';
 	import { mdiCloseCircleOutline } from '@mdi/js';
-	import { onMount } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { Icon, Notification, ProgressCircle } from 'svelte-ux';
+	import { type Video } from "$lib/api-clients/backend-client/models/Video"
+	import { VideoOrderBy } from "$lib/index"
+	import { StorageApi, VideosApi, type ApiVideosListVideosGetRequest } from '$lib/api-clients/backend-client/apis/index';
+	import { type VideoCountResponse } from "$lib/api-clients/backend-client/models"
+	import { WebSocketService, type VideoDownloadInfo } from '$lib/websocketService';
+	import { BASE_PATH, BaseAPI } from '$lib/api-clients/backend-client';
+	import { url } from 'svelte-ux/utils/routing';
 
-	let videos: ApiVideoResponse[] = [];
+	interface VodeoDownloadInfo{
+		videoId: number,
+		downloadPercent: number
+	}
+	let videosInProgress: VodeoDownloadInfo[] = [];
+
+	let videos: Video[] = [];
 	let videoCount = 0;
 	let videosPerPage = 3;
-	let page = 1;
+	let currentPage = 1;
 	let totalPages = 0;
 
 	let innerWidth = 0;
@@ -37,26 +50,45 @@
 		}, 5000);
 	}
 
-	let orderBy: VideoOrderByParam = VideoOrderByParam.Date;
+	let orderByFilter: VideoOrderBy = VideoOrderBy.CreationDate;
 	let orderByDescending: boolean = true;
 	let videoSearch: string = '';
 	async function getVideosAsync() {
-		let result = null;
+		let videosApi = new VideosApi();
+		let videosResult : Video[] | null = null;
+		let totalVideosAmountResult : VideoCountResponse | null = null;
+
 		try {
-			result = await fetchVideosJsonAsync(videosPerPage, page, orderBy, orderByDescending, videoSearch);
+			const request: ApiVideosListVideosGetRequest = {
+				take: videosPerPage,
+				page: currentPage,
+				orderBy: orderByFilter,
+				descending: orderByDescending,
+				search: videoSearch
+			}
+			videosResult = await videosApi.apiVideosListVideosGet(request);
+			totalVideosAmountResult = await videosApi.apiVideosGetVideoCountGet();
+
+			videosResult.forEach(element => {
+				if (!element.downloaded && element.id) {
+					videosApi.apiVideosGetVideoDownloadInfoGet({videoId: element.id})
+				}
+			});
+
 		} catch (error) {
 			console.log('Failed to fetch videos. Error: ' + error);
 			showErrorDialog('Fetch error', 'Failed to fetch videos.');
 		} finally {
-			videos = result?.videos ?? [];
-			videoCount = result?.totalAmount ?? 0;
+			videos = videosResult ?? [];
+			videoCount = totalVideosAmountResult?.count ?? 0;
 		}
 	}
 
 	async function updateUsedStorageAsync() {
+		let storageApi = new StorageApi();
 		try {
-			let response = await getUsedStorageAsync();
-			usedStorageStore.update((x) => (x = response.usedStorage));
+			let response = await storageApi.apiStorageGetUsedStorageGet();
+			usedStorageStore.update((x) => (x = response.usedStorage ?? 0));
 		} catch (error) {
 			console.error('Something went wrong when fetching storage usage: ', error);
 		}
@@ -78,8 +110,8 @@
 	}
 
 	orderByStore.subscribe(async (x) => {
-		if (orderBy != x) {
-			orderBy = x;
+		if (orderByFilter != x) {
+			orderByFilter = x;
 			await updateVideoInfoAsync();
 		}
 	});
@@ -100,46 +132,45 @@
 				clearTimeout(searchTimeout);
 			}
 			searchTimeout = setTimeout(async () => {
-				page = 1;
+				currentPage = 1;
 				await updateVideoInfoAsync();
 			}, 400);
 		}
 	});
 
 	let interval: NodeJS.Timeout;
-	async function checkVideosDownloadStatusAsync() {
-		if (videos.every((video) => video.downloaded)) {
+	let webSocketService: WebSocketService;
+
+	async function handleIncomingSocketMessage(message: string): Promise<void> {
+        let videoDownloadInfo: VideoDownloadInfo = JSON.parse(message)
+
+		if (videoDownloadInfo.downloaded) {
+			await updateVideoInfoAsync();
 			return;
 		}
 
-		for (let i = 0; i < videos.length; i++) {
-			const video = videos[i];
-
-			if (video.downloaded) {
-				continue;
-			}
-
-			try {
-				const updatedVideo = await fetchVideoInfoAsync(video.id);
-				if (updatedVideo == null) {
-					throw new Error('Video response was null.');
-				}
-
-				if (updatedVideo.downloaded) {
-					await updateUsedStorageAsync();
-				}
-
-				videos[i] = updatedVideo;
-				videos = videos;
-			} catch (error) {
-				console.error('Failed to fetch video information: ', error);
-			}
+		let video = videos.find(x => x.id == videoDownloadInfo.videoId);
+		if (video != undefined) {
+			video.downloaded 
 		}
-	}
+    }
+
+	function renewSocket(): void {
+        webSocketService.sendMessage("renew");
+    }
 
 	onMount(async () => {
 		await updateVideoInfoAsync();
-		interval = setInterval(checkVideosDownloadStatusAsync, 1000);
+
+		let baseUrl = new URL(BASE_PATH);
+		webSocketService = new WebSocketService(`ws://${baseUrl.hostname + ":" +  baseUrl.port + "/ws"}`, handleIncomingSocketMessage);
+		webSocketService.connect();location
+
+		interval = setInterval(renewSocket, 10000);
+	});
+
+	onDestroy(async () => {
+
 	});
 </script>
 
@@ -178,7 +209,7 @@
 			<div class="mb-2 mt-auto flex justify-center">
 				<Pagination
 					on:pageUpdated={updateVideoInfoAsync}
-					bind:currentPage={page}
+					bind:currentPage={currentPage}
 					bind:total={videoCount}
 					bind:perPage={videosPerPage}
 				/>

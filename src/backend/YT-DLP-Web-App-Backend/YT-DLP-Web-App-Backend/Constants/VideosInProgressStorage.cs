@@ -52,6 +52,15 @@ namespace YT_DLP_Web_App_Backend.Constants
             }
         }
 
+        public static VideoDownloadInfo? GetVideoInfo(int videoId)
+        {
+            lock(videosInProgress)
+            {
+                videosInProgress.TryGetValue(videoId, out VideoDownloadInfo? videoDownloadInfo);
+                return videoDownloadInfo;
+            }
+        }
+
         public static void AddVideoDownloadUpdatedHandler(OnVideoDownloadUpdated handler)
         {
             onVideoDownloadUpdated += handler;
