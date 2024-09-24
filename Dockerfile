@@ -32,7 +32,7 @@ COPY --from=yt-dlp-web-backend-builder /app/backend/bin/docker-release/linux-x64
 RUN chmod +x /app/yt-dlp-web/backend/YT-DLP-Web-App-Backend
 RUN apt-get update
 RUN apt-get upgrade -y
-RUN apt-get install -y --no-install-recommends curl ffmpeg
+RUN apt-get install -y curl ffmpeg
 RUN apt-get clean
 
 RUN curl -L -o /usr/bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux
