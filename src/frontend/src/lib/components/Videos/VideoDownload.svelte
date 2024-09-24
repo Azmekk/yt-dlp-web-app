@@ -1,11 +1,9 @@
 <script lang="ts">
-	import {
-		getVideoDimensionsAsync,
-		getYoutubeNameAsync,
-		saveVideoAsync,
-		type VideoDimensionsResponse
-	} from '$lib/api_client';
-	import { getFormattedVideoName } from '$lib/utils';
+	import { VideosApi } from '$lib/api-clients/backend-client';
+	import type { VideoDimensions } from '$lib/api-clients/backend-client/models';
+
+
+	import { getFormattedVideoName, getResolutionDimensions } from '$lib/utils';
 	import { mdiCancel, mdiDownload, mdiPlus } from '@mdi/js';
 	import { createEventDispatcher } from 'svelte';
 	import {
@@ -28,7 +26,7 @@
 		}
 	];
 
-	let videoDimensions: VideoDimensionsResponse = {
+	let videoDimensions: VideoDimensions = {
 		width: 0,
 		height: 0
 	};
@@ -97,11 +95,14 @@
 			return;
 		}
 
+		let videoApi = new VideosApi();
+
 		try {
-			var nameResponse = await getYoutubeNameAsync(videoUrl);
-			fileName = (nameResponse == null || nameResponse?.title == "") ? getFormattedVideoName() : nameResponse?.title;
+			var nameResponse = await videoApi.apiVideosGetNameGet({videoUrl: videoUrl});
+			fileName = (nameResponse == null || nameResponse.name == null || nameResponse.name == "") ? getFormattedVideoName() : nameResponse?.name.substring(0, 80);
 		} catch (error) {
-			console.error('Failed to fetch video name.');
+			alert('Failed to fetch video name.');
+			console.error(error);
 		}
 	}
 
@@ -110,33 +111,41 @@
 			return;
 		}
 
+		let videoApi = new VideosApi();
+
 		try {
-			var dimensionsResponse = await getVideoDimensionsAsync(videoUrl);
+			var dimensionsResponse = await videoApi.apiVideosGetMaxDimensionsGet({videoUrl: videoUrl});
 			maxDimension = dimensionsResponse.height ?? 2160;
 		} catch (error) {
-			console.error('Failed to fetch video max dimensions.');
+			alert('Failed to fetch video max dimensions.');
+			console.error(error);
 		}
 	}
 
 	async function getVideoInfoAsync() {
 		dialogLoading = true;
 		await fetchNameAsync();
-		await fetchDimensionsAsync();
+		if (dimensionsToggle) {
+			await fetchDimensionsAsync();
+		}
 		dialogLoading = false;
 	}
 
 	let saveVideoButtonLoading = false;
 	async function submitVideoSaveAsync() {
 		saveVideoButtonLoading = true;
+		let videoApi = new VideosApi();
 		try {
 			if (dimensionsToggle) {
-				await saveVideoAsync(videoUrl, fileName, selectedFormat, selectedDimension);
+				//videoUrl, fileName, selectedFormat, selectedDimension
+				await videoApi.apiVideosSaveVideoPost({ saveVideoRequest: {videoUrl, videoName: fileName, videoDimensions: getResolutionDimensions(selectedDimension) ?? undefined}});
 			}
 			else{
-				await saveVideoAsync(videoUrl, fileName, selectedFormat);
+				await videoApi.apiVideosSaveVideoPost({ saveVideoRequest: {videoUrl, videoName: fileName}});
 			}
 			
 		} catch (error) {
+			alert("Video save failed.");
 			dispatch('videoSaveFail', {error: error});
 			console.error(error);
 		} finally {
@@ -146,8 +155,8 @@
 	}
 </script>
 
-<div class="fixed bottom-10 md:bottom-20 right-2 md:right-10 p-4 z-10">
-	<Button class="text-slate-100" size="lg" on:click={() => (downloadVideoDialogOpen = true)} icon={mdiPlus} rounded="full" variant="fill" color="primary" > New video</Button>
+<div class="fixed bottom-10 md:bottom-15 right-2 md:right-10 p-4 z-10">
+	<Button class="text-slate-100" size="lg" on:click={() => (downloadVideoDialogOpen = true)} icon={mdiPlus} rounded="full" variant="fill" color="primary" >New Video</Button>
 </div>
 
 <div class="w-full absolute">

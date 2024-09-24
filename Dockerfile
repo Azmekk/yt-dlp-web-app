@@ -13,29 +13,28 @@ RUN curl -L https://unpkg.com/@pnpm/self-installer | node
 RUN pnpm install
 RUN pnpm build
 
-FROM golang:1.23.0-alpine AS yt-dlp-web-backend-builder
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS yt-dlp-web-backend-builder
 
 WORKDIR /app/backend
 
-COPY ./src/backend ./
+COPY ./src/backend/YT-DLP-Web-App-Backend ./
 
-RUN apk add build-base
+RUN dotnet restore
+RUN dotnet publish -c Release -r linux-x64 --self-contained true -o "./bin/docker-release/linux-x64" -p:PublishSingleFile=true "YT-DLP-Web-App-Backend.csproj"
 
-RUN go mod download
-RUN GOOS=linux go build -o ./bin/build/backend
-
-FROM alpine:latest
+FROM ubuntu:latest
 
 WORKDIR /app/yt-dlp-web
 
-COPY --from=yt-dlp-web-frontend-builder /app/frontend/build ./static
-COPY --from=yt-dlp-web-backend-builder /app/backend/bin/build/backend ./backend
+COPY --from=yt-dlp-web-frontend-builder /app/frontend/build /app/yt-dlp-web/backend/Static
+COPY --from=yt-dlp-web-backend-builder /app/backend/bin/docker-release/linux-x64 /app/yt-dlp-web/backend
 
-RUN apk update
-RUN apk upgrade
-RUN apk add --no-cache ffmpeg
-RUN apk add --no-cache yt-dlp
+RUN chmod +x /app/yt-dlp-web/backend/YT-DLP-Web-App-Backend
+RUN apt-get update
+RUN apt-get upgrade -y
+RUN apt-get install -y --no-install-recommends ffmpeg yt-dlp
+RUN apt-get clean
 
 EXPOSE 41001
 
-CMD ["./backend"] 
+CMD ["/app/yt-dlp-web/backend/YT-DLP-Web-App-Backend"]

@@ -31,5 +31,20 @@ const randomString = (length: number): string => {
 
 export function getFormattedVideoName(): string{
 	const unixNano = BigInt(Date.now()) * BigInt(1e6);
-	return `${unixNano}_${randomString(5)}`
+	return `${unixNano}${randomString(5)}`
+}
+
+export function getResolutionDimensions(value: number): { width: number; height: number } | null {
+    const resolutions: { [key: number]: { width: number; height: number } } = {
+        2160: { width: 3840, height: 2160 },
+        1440: { width: 2560, height: 1440 },
+        1080: { width: 1920, height: 1080 },
+        720: { width: 1280, height: 720 },
+        480: { width: 854, height: 480 },
+        360: { width: 640, height: 360 },
+        240: { width: 426, height: 240 },
+        144: { width: 256, height: 144 },
+    };
+
+    return resolutions[value] || null;
 }

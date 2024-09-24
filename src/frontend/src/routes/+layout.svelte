@@ -16,13 +16,15 @@
 		Tooltip
 	} from 'svelte-ux';
 
+	import { VideoOrderBy } from "$lib/index"
+	import * as backendClient from '$lib/api-clients/backend-client/index'
 	import { page } from '$app/stores';
-	import { getUsedStorageAsync, VideoOrderByParam } from '$lib/api_client';
 	import { orderByDescendingStore, orderByStore, videoSearchStore } from '$lib/Stores/FilterStores';
 	import { usedStorageStore } from '$lib/Stores/UsedStorageStore';
 	import { formatBytes } from '$lib/utils';
 	import { onMount } from 'svelte';
 	import '../app.postcss';
+	import { StorageApi } from '$lib/api-clients/backend-client/apis/StorageApi';
 
 	settings({
 		components: {
@@ -47,7 +49,7 @@
 		usedStorage = x;
 	});
 
-	let orderBy: VideoOrderByParam = VideoOrderByParam.Date;
+	let orderBy: VideoOrderBy = VideoOrderBy.CreationDate;
 	orderByStore.subscribe((x) => {
 		orderBy = x;
 	});
@@ -66,11 +68,13 @@
 
 	let usedStorageLoading = false;
 	async function updateUsedStorageAsync() {
+		let storageApi = new StorageApi();
 		usedStorageLoading = true;
 		try {
-			let response = await getUsedStorageAsync();
-			usedStorageStore.update((x) => (x = response.usedStorage));
+			let response = await storageApi.apiStorageGetUsedStorageGet();
+			usedStorageStore.update((x) => (x = response.usedStorage ?? 0));
 		} catch (error) {
+			alert('Something went wrong when fetching storage usage');
 			console.error('Something went wrong when fetching storage usage: ', error);
 		} finally {
 			usedStorageLoading = false;
@@ -162,21 +166,21 @@
 					name="label"
 					size="lg"
 					bind:group={orderBy}
-					value={VideoOrderByParam.Date}
+					value={VideoOrderBy.CreationDate}
 					on:change={() => orderByStore.update((x) => (x = orderBy))}>Date</Radio
 				>
 				<Radio
 					name="label"
 					size="lg"
 					bind:group={orderBy}
-					value={VideoOrderByParam.Size}
+					value={VideoOrderBy.Size}
 					on:change={() => orderByStore.update((x) => (x = orderBy))}>Size</Radio
 				>
 				<Radio
 					name="label"
 					size="lg"
 					bind:group={orderBy}
-					value={VideoOrderByParam.Title}
+					value={VideoOrderBy.FileName}
 					on:change={() => orderByStore.update((x) => (x = orderBy))}>Title</Radio
 				>
 			</div>

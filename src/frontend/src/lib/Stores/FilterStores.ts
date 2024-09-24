@@ -1,7 +1,7 @@
+import { VideoOrderBy } from '$lib/index';
 import { writable } from 'svelte/store';
-import { VideoOrderByParam } from '$lib/api_client'
 
-export const orderByStore = writable<VideoOrderByParam>(VideoOrderByParam.Date);
+export const orderByStore = writable<VideoOrderBy>(VideoOrderBy.CreationDate);
 export const orderByDescendingStore = writable(true);
 export const videoSearchStore = writable("");
 
