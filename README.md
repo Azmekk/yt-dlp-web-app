@@ -62,8 +62,8 @@ To start the container, use the following command:
 docker run -d \
   --name yt-dlp-web-app \
   -p 41001:41001 \
-  -v /hostpath/downloads:/app/yt-dlp-web/downloads \
-  -v /hostpath/database:/app/yt-dlp-web/database \
+  -v /hostpath/downloads:/app/yt-dlp-web/Downloads \
+  -v /hostpath/database:/app/yt-dlp-web/Database \
   --restart unless-stopped \
   azmek/yt-dlp-web-app:latest
 ```
@@ -78,8 +78,8 @@ services:
     ports:
       - 41001:41001
     volumes:
-      - /hostpath/downloads:/app/yt-dlp-web/downloads
-      - /hostpath/database:/app/yt-dlp-web/database
+      - /hostpath/downloads:/app/yt-dlp-web/Downloads
+      - /hostpath/database:/app/yt-dlp-web/Database
     restart: unless-stopped
 ``` 
 
