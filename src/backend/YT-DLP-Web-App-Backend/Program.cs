@@ -118,14 +118,14 @@ namespace YT_DLP_Web_App_Backend
                     policy =>
                     {
 #if DEBUG
-                        policy.AllowCredentials();
-                        policy.WithOrigins("http://localhost:5173", "https://localhost:5173", "localhost:5173")
+                        policy.AllowCredentials()
+                            .SetIsOriginAllowed(host => true)
                             .AllowAnyHeader()
                             .AllowAnyMethod()
                             .WithExposedHeaders();
 #else
-                        policy.AllowCredentials();
-                        policy.WithOrigins("http://localhost:41001", "https://localhost:41001")
+                        policy.AllowCredentials()
+                            .SetIsOriginAllowed(host => true)
                             .AllowAnyHeader()
                             .AllowAnyMethod();
 #endif
