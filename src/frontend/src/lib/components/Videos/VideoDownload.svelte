@@ -101,7 +101,8 @@
 			var nameResponse = await videoApi.apiVideosGetNameGet({videoUrl: videoUrl});
 			fileName = (nameResponse == null || nameResponse.name == null || nameResponse.name == "") ? getFormattedVideoName() : nameResponse?.name.substring(0, 80);
 		} catch (error) {
-			console.error('Failed to fetch video name.');
+			alert('Failed to fetch video name.');
+			console.error(error);
 		}
 	}
 
@@ -116,14 +117,17 @@
 			var dimensionsResponse = await videoApi.apiVideosGetMaxDimensionsGet({videoUrl: videoUrl});
 			maxDimension = dimensionsResponse.height ?? 2160;
 		} catch (error) {
-			console.error('Failed to fetch video max dimensions.');
+			alert('Failed to fetch video max dimensions.');
+			console.error(error);
 		}
 	}
 
 	async function getVideoInfoAsync() {
 		dialogLoading = true;
 		await fetchNameAsync();
-		await fetchDimensionsAsync();
+		if (dimensionsToggle) {
+			await fetchDimensionsAsync();
+		}
 		dialogLoading = false;
 	}
 
@@ -141,6 +145,7 @@
 			}
 			
 		} catch (error) {
+			alert("Video save failed.");
 			dispatch('videoSaveFail', {error: error});
 			console.error(error);
 		} finally {
@@ -150,8 +155,8 @@
 	}
 </script>
 
-<div class="fixed bottom-10 md:bottom-20 right-2 md:right-10 p-4 z-10">
-	<Button class="text-slate-100" size="lg" on:click={() => (downloadVideoDialogOpen = true)} icon={mdiPlus} rounded="full" variant="fill" color="primary" ></Button>
+<div class="fixed bottom-10 md:bottom-15 right-2 md:right-10 p-4 z-10">
+	<Button class="text-slate-100" size="lg" on:click={() => (downloadVideoDialogOpen = true)} icon={mdiPlus} rounded="full" variant="fill" color="primary" >New Video</Button>
 </div>
 
 <div class="w-full absolute">

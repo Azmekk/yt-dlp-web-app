@@ -6,5 +6,6 @@
         public static readonly string SqliteFilePath = Path.Join(SqliteFolderPath, "app_database.db");
 
         public static readonly string DefaultDownloadDir = Path.Join(AppDomain.CurrentDomain.BaseDirectory, "Downloads");
+        public static readonly string DefaultStaticDir = Path.Join(AppDomain.CurrentDomain.BaseDirectory, "Static");
     }
 }

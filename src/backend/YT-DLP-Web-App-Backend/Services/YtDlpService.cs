@@ -18,7 +18,7 @@ namespace YT_DLP_Web_App_Backend.Services
     {
         public async Task<VideoDimensions> GetMaxVideoResolutionAsync(string url)
         {
-            if(!Uri.IsWellFormedUriString(url, UriKind.Absolute))
+            if (!Uri.IsWellFormedUriString(url, UriKind.Absolute))
             {
                 throw new Exception($"Invalid url {url}");
             }
@@ -37,16 +37,16 @@ namespace YT_DLP_Web_App_Backend.Services
             options.AddCustomOption<string>("--print", "height");
 
             string[] urls = [url];
-            int success =  await ytdlProc.RunAsync(urls, options);
+            int success = await ytdlProc.RunAsync(urls, options);
 
-            if(success > 0)
+            if (success > 0)
             {
                 throw new Exception($"Failed to fetch video dimensions.");
             }
 
             string[] lines = stdOutput.Split(new[] { '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries);
 
-            if(lines.Length < 2)
+            if (lines.Length < 2)
             {
                 return new(0, 0);
             }
@@ -56,7 +56,7 @@ namespace YT_DLP_Web_App_Backend.Services
 
         public async Task<VideoData> GetVideoDataAsync(string url)
         {
-            if(!Uri.IsWellFormedUriString(url, UriKind.Absolute))
+            if (!Uri.IsWellFormedUriString(url, UriKind.Absolute))
             {
                 throw new Exception($"Invalid url {url}");
             }
@@ -70,7 +70,7 @@ namespace YT_DLP_Web_App_Backend.Services
 
             RunResult<VideoData> runResult = await ytdl.RunVideoDataFetch(url);
 
-            if(!runResult.Success)
+            if (!runResult.Success)
             {
                 string errorString = string.Join("\n", runResult.ErrorOutput);
                 throw new Exception($"YtDlp failed with error: {errorString}");
@@ -79,12 +79,15 @@ namespace YT_DLP_Web_App_Backend.Services
             return runResult.Data;
         }
 
-        public async Task DownloadVideoAsync(string url, string videoName, int videoId, VideoDimensions? dimensions, CancellationToken cancellationToken = default)
+        public async Task DownloadVideoAsync(string url, string videoName, int videoId, VideoDimensions? dimensions,
+            CancellationToken cancellationToken = default)
         {
-            Video? videoRecord = await videoDbContext.Videos.FirstOrDefaultAsync(x => x.Id == videoId) ?? throw new Exception("No existing video record found when attempting to download the video.");
+            Video? videoRecord = await videoDbContext.Videos.FirstOrDefaultAsync(x => x.Id == videoId) ??
+                                 throw new Exception(
+                                     "No existing video record found when attempting to download the video.");
             try
             {
-                if(!Uri.IsWellFormedUriString(url, UriKind.Absolute))
+                if (!Uri.IsWellFormedUriString(url, UriKind.Absolute))
                 {
                     throw new Exception($"Invalid url {url}");
                 }
@@ -99,7 +102,7 @@ namespace YT_DLP_Web_App_Backend.Services
                 };
 
                 string requestedFormat;
-                if(dimensions != null && dimensions.Height > 0 && dimensions.Width > 0)
+                if (dimensions != null && dimensions.Height > 0 && dimensions.Width > 0)
                 {
                     requestedFormat = $"bestvideo[height={dimensions.Height}][width={dimensions.Width}]+bestaudio/best";
                 }
@@ -123,9 +126,10 @@ namespace YT_DLP_Web_App_Backend.Services
                     ConvertThumbnails = "jpg",
                 };
 
-                RunResult<string> result = await ytdl.RunVideoDownload(url, progress: progress, ct: cancellationToken, overrideOptions: options);
+                RunResult<string> result = await ytdl.RunVideoDownload(url, progress: progress, ct: cancellationToken,
+                    overrideOptions: options);
 
-                if(!result.Success)
+                if (!result.Success)
                 {
                     var errorString = string.Join("\n", result.ErrorOutput);
                     throw new Exception(errorString);
@@ -140,30 +144,56 @@ namespace YT_DLP_Web_App_Backend.Services
                 await videoDbContext.SaveChangesAsync();
                 VideosInProgressStorage.MarkVideoDownloaded(videoRecord.Id);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 string finalFilePath = Path.Join(AppConstants.DefaultDownloadDir, videoRecord.FileName);
                 string finalThumbnailPath = Path.Join(AppConstants.DefaultDownloadDir, videoName + ".jpg");
 
-                if(File.Exists(finalFilePath))
+                if (File.Exists(finalFilePath))
                 {
                     File.Delete(finalFilePath);
                 }
 
-                if(File.Exists(finalThumbnailPath))
+                if (File.Exists(finalThumbnailPath))
                 {
                     File.Delete(finalThumbnailPath);
                 }
 
-                if(videoRecord != null)
-                {
-                    videoDbContext.Remove(videoRecord);
-                    await videoDbContext.SaveChangesAsync();
-                }
-                
+                videoDbContext.Remove(videoRecord);
+                await videoDbContext.SaveChangesAsync();
+
                 throw new Exception($"Failed to download video due to ex: {ex}");
             }
-            
+        }
+        
+        public async Task DownloadSavedVideo(int videoId)
+        {
+            Video? video = await videoDbContext.Videos.FirstOrDefaultAsync(x => x.Id == videoId);
+
+            if(video == null)
+            {
+                return;
+            }
+
+            string videoPath = Path.Join(AppConstants.DefaultDownloadDir, video.FileName);
+            if(File.Exists(videoPath))
+            {
+                File.Delete(videoPath);
+            }
+
+            string thumbnailPath = Path.Join(AppConstants.DefaultDownloadDir, video.FileName);
+            if(!string.IsNullOrEmpty(video.ThumbnailName) && File.Exists(thumbnailPath))
+            {
+                File.Delete(thumbnailPath);
+            }
+
+            string mp3Path = Path.Join(AppConstants.DefaultDownloadDir, video.Mp3FileName);
+            if(!string.IsNullOrEmpty(video.Mp3FileName) && File.Exists(mp3Path))
+            {
+                File.Delete(mp3Path);
+            }
+
+            await DownloadVideoAsync(video.Url, video.FileName.TrimEnd(Path.GetExtension(video.FileName)), video.Id, null);
         }
     }
 }

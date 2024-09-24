@@ -74,6 +74,7 @@
 			let response = await storageApi.apiStorageGetUsedStorageGet();
 			usedStorageStore.update((x) => (x = response.usedStorage ?? 0));
 		} catch (error) {
+			alert('Something went wrong when fetching storage usage');
 			console.error('Something went wrong when fetching storage usage: ', error);
 		} finally {
 			usedStorageLoading = false;

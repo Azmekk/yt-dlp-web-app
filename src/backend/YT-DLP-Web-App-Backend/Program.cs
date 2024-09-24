@@ -1,21 +1,22 @@
 using Hangfire;
 using Hangfire.MemoryStorage;
-using Microsoft.AspNetCore.Cors;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.FileProviders;
 using YT_DLP_Web_App_Backend.Constants;
 using YT_DLP_Web_App_Backend.Database;
 using YT_DLP_Web_App_Backend.Helpers;
 using YT_DLP_Web_App_Backend.Services;
+using YT_DLP_Web_App_Backend.Services.BackgroundServices;
 
 namespace YT_DLP_Web_App_Backend
 {
-    public class Program
+    public static class Program
     {
         public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            if(!await DependenciesHelper.VerifyOrInstallDependenciesAsync())
+            if (!await DependenciesHelper.VerifyOrInstallDependenciesAsync())
             {
                 throw new Exception("App dependencies not found.");
             }
@@ -39,7 +40,7 @@ namespace YT_DLP_Web_App_Backend
 
         private static async Task SetupApp(WebApplication app)
         {
-            if(app.Environment.IsDevelopment())
+            if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
             }
@@ -50,6 +51,13 @@ namespace YT_DLP_Web_App_Backend
             app.UseSwaggerUI();
 
             app.UseAuthorization();
+            
+            app.UseFileServer(new FileServerOptions()
+            {
+                FileProvider = new PhysicalFileProvider(AppConstants.DefaultStaticDir),
+                EnableDirectoryBrowsing = false,
+            });
+            
             app.MapControllers();
 
             var webSocketOptions = new WebSocketOptions()
@@ -59,6 +67,7 @@ namespace YT_DLP_Web_App_Backend
 
             app.UseWebSockets(webSocketOptions);
             app.UseCors("Default");
+            
             app.Run();
         }
 
@@ -66,11 +75,12 @@ namespace YT_DLP_Web_App_Backend
         {
             Directory.CreateDirectory(AppConstants.SqliteFolderPath);
             Directory.CreateDirectory(AppConstants.DefaultDownloadDir);
+            Directory.CreateDirectory((AppConstants.DefaultStaticDir));
         }
 
         private static void CreateDbIfNotExist()
         {
-            if(!File.Exists(AppConstants.SqliteFilePath))
+            if (!File.Exists(AppConstants.SqliteFilePath))
             {
                 File.Create(AppConstants.SqliteFilePath).Close();
             }
@@ -79,7 +89,7 @@ namespace YT_DLP_Web_App_Backend
         private static void AddServices(WebApplicationBuilder builder)
         {
             builder.Services.AddHangfire(config =>
-                 config.UseMemoryStorage());
+                config.UseMemoryStorage());
             builder.Services.AddHangfireServer();
 
             builder.Services.AddDbContext<VideoDbContext>(options =>
@@ -89,6 +99,8 @@ namespace YT_DLP_Web_App_Backend
 
             builder.Services.AddScoped<VideosService>();
             builder.Services.AddScoped<YtDlpService>();
+
+            builder.Services.AddHostedService<EnqueueUnfinishedVideosService>();
         }
 
         private static async Task MigrateDatabase(WebApplication app)
@@ -103,21 +115,21 @@ namespace YT_DLP_Web_App_Backend
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy(name: "Default",
-                                  policy =>
-                                  {
+                    policy =>
+                    {
 #if DEBUG
-                                      policy.AllowCredentials();
-                                      policy.WithOrigins("http://localhost:5173", "https://localhost:5173", "localhost:5173")
-                                      .AllowAnyHeader()
-                                      .AllowAnyMethod()
-                                      .WithExposedHeaders();
+                        policy.AllowCredentials();
+                        policy.WithOrigins("http://localhost:5173", "https://localhost:5173", "localhost:5173")
+                            .AllowAnyHeader()
+                            .AllowAnyMethod()
+                            .WithExposedHeaders();
 #else
-                                      policy.AllowCredentials();
-                                      policy.WithOrigins("http://localhost:41001", "https://localhost:41001")
-                                      .AllowAnyHeader()
-                                      .AllowAnyMethod();
+                        policy.AllowCredentials();
+                        policy.WithOrigins("http://localhost:41001", "https://localhost:41001")
+                            .AllowAnyHeader()
+                            .AllowAnyMethod();
 #endif
-                                  });
+                    });
             });
         }
     }

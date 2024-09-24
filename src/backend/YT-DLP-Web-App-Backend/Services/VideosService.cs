@@ -1,12 +1,5 @@
 ﻿using FFmpeg.NET;
-using FFmpeg.NET.Enums;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
-using Microsoft.VisualBasic;
-using System;
-using System.Diagnostics;
-using System.Reflection.Metadata.Ecma335;
-using System.Security.Cryptography.X509Certificates;
 using YT_DLP_Web_App_Backend.Constants;
 using YT_DLP_Web_App_Backend.Database;
 using YT_DLP_Web_App_Backend.Database.Entities;
@@ -14,7 +7,7 @@ using YT_DLP_Web_App_Backend.Helpers;
 
 namespace YT_DLP_Web_App_Backend.Services
 {
-    public class VideosService(VideoDbContext videoDbContext, YtDlpService ytDlpService)
+    public class VideosService(VideoDbContext videoDbContext)
     {
         public async Task<Video> CreateInitialVideoRecord(string url, string name)
         {
@@ -36,7 +29,7 @@ namespace YT_DLP_Web_App_Backend.Services
             return video;
         }
 
-        public async Task<List<Video>> GetVideosAsync(int take, int page, OrderVideosBy orderBy, bool descending, string search = "")
+        public async Task<List<Video>> GetVideosAsync(int take, int page, OrderVideosBy orderBy, bool descending, string? search = "")
             {
             var queryable = videoDbContext.Videos
                 .Where(x => x.DeletedAt == null);
@@ -52,42 +45,42 @@ namespace YT_DLP_Web_App_Backend.Services
                     if(descending)
                     {
                         queryable = queryable.OrderByDescending(x => x.CreatedAt);
-                        break;
                     }
                     else
                     {
                         queryable = queryable.OrderBy(x => x.CreatedAt);
-                        break;
                     }
+
+                    break;
                 case OrderVideosBy.FileName:
                     if(descending)
                     {
-                        queryable = queryable.OrderByDescending(x => x.CreatedAt);
-                        break;
+                        queryable = queryable.OrderByDescending(x => x.FileName);
                     }
                     else
                     {
-                        queryable = queryable.OrderBy(x => x.CreatedAt);
-                        break;
+                        queryable = queryable.OrderBy(x => x.FileName);
                     }
+
+                    break;
                 case OrderVideosBy.Size:
                     if(descending)
                     {
-                        queryable = queryable.OrderByDescending(x => x.CreatedAt);
-                        break;
+                        queryable = queryable.OrderByDescending(x => x.Size);
                     }
                     else
                     {
-                        queryable = queryable.OrderBy(x => x.CreatedAt);
-                        break;
+                        queryable = queryable.OrderBy(x => x.Size);
                     }
+
+                    break;
             }
 
-            queryable = queryable
+            List<Video> result = await queryable
                 .Skip((page - 1) * take)
-                .Take(take);
-
-            List<Video> result = await queryable.ToListAsync();
+                .Take(take)
+                .ToListAsync();
+                
             return result;
         }
 
@@ -123,9 +116,9 @@ namespace YT_DLP_Web_App_Backend.Services
             }
 
             var mp3Path = Path.Join(AppConstants.DefaultDownloadDir, video.Mp3FileName);
-            if(File.Exists(thumbnailPath))
+            if(File.Exists(mp3Path))
             {
-                File.Delete(thumbnailPath);
+                File.Delete(mp3Path);
             }
 
             videoDbContext.Remove(video);
@@ -239,36 +232,6 @@ namespace YT_DLP_Web_App_Backend.Services
             }
 
             return false;
-        }
-
-        public async Task DownloadSavedVideo(int videoId)
-        {
-            Video? video = await videoDbContext.Videos.FirstOrDefaultAsync(x => x.Id == videoId);
-
-            if(video == null)
-            {
-                return;
-            }
-
-            string videoPath = Path.Join(AppConstants.DefaultDownloadDir, video.FileName);
-            if(File.Exists(videoPath))
-            {
-                File.Delete(videoPath);
-            }
-
-            string thumbnailPath = Path.Join(AppConstants.DefaultDownloadDir, video.FileName);
-            if(!string.IsNullOrEmpty(video.ThumbnailName) && File.Exists(thumbnailPath))
-            {
-                File.Delete(thumbnailPath);
-            }
-
-            string mp3Path = Path.Join(AppConstants.DefaultDownloadDir, video.Mp3FileName);
-            if(!string.IsNullOrEmpty(video.Mp3FileName) && File.Exists(mp3Path))
-            {
-                File.Delete(mp3Path);
-            }
-
-            await ytDlpService.DownloadVideoAsync(video.Url, video.FileName.TrimEnd(Path.GetExtension(video.FileName)), video.Id, null);
         }
 
         public bool VideoFileExists(string videoName)

@@ -33,6 +33,7 @@
 			await videosApi.apiVideosDeleteVideoDelete({videoId: video.id ?? -1});
 			dispatch('videoDeleted');
 		} catch (error) {
+			alert('Failed to delete video.');
 			console.log('Failed to delete video: ', error);
 		} finally {
 			deleteButtonLoading = false;
@@ -56,6 +57,7 @@
 			dispatch('videoModified');
             clearNameEditInputs();
 		} catch (error) {
+			alert('Failed to rename video');
 			console.log('Failed to rename video: ', error);
 		} finally {
 			editButtonLoading = false;
@@ -95,6 +97,7 @@
 
         URL.revokeObjectURL(link.href);
     } catch (error) {
+		alert("Error downloading resource");
         console.error("Error downloading resource:", error);
     }
 }

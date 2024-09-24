@@ -14,10 +14,9 @@
 		VideosApi,
 		type ApiVideosListVideosGetRequest
 	} from '$lib/api-clients/backend-client/apis/index';
-	import { VideoDownloadInfoFromJSONTyped, VideoDownloadInfoToJSON, type VideoCountResponse } from '$lib/api-clients/backend-client/models';
+	import { type VideoCountResponse } from '$lib/api-clients/backend-client/models';
 	import { WebSocketService, type VideoDownloadInfo } from '$lib/websocketService';
 	import { BASE_PATH, BaseAPI } from '$lib/api-clients/backend-client';
-	import { url } from 'svelte-ux/utils/routing';
 
 	interface VodeoDownloadInfo {
 		videoId: number;
@@ -81,6 +80,7 @@
 				}
 			});
 		} catch (error) {
+			alert('Failed to fetch videos.');
 			console.log('Failed to fetch videos. Error: ' + error);
 			showErrorDialog('Fetch error', 'Failed to fetch videos.');
 		} finally {
@@ -95,6 +95,7 @@
 			let response = await storageApi.apiStorageGetUsedStorageGet();
 			usedStorageStore.update((x) => (x = response.usedStorage ?? 0));
 		} catch (error) {
+			alert('Something went wrong when fetching storage usage.');
 			console.error('Something went wrong when fetching storage usage: ', error);
 		}
 	}
@@ -172,7 +173,7 @@
 
 		let baseUrl = new URL(BASE_PATH);
 		webSocketService = new WebSocketService(
-			`ws://${baseUrl.hostname + ':' + baseUrl.port + '/ws'}`,
+			`${baseUrl.protocol == "https" ? "wss" : "ws"}://${baseUrl.hostname + ':' + baseUrl.port + '/ws'}`,
 			handleIncomingSocketMessage
 		);
 		webSocketService.connect();

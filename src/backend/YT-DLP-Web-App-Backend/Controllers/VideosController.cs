@@ -1,10 +1,8 @@
 ﻿using Hangfire;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
-using System.Net.Mime;
 using YT_DLP_Web_App_Backend.Constants;
 using YT_DLP_Web_App_Backend.Database.Entities;
 using YT_DLP_Web_App_Backend.DataObjects;
@@ -47,7 +45,7 @@ namespace YT_DLP_Web_App_Backend.Controllers
 
         [HttpGet]
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(List<Video>))]
-        public async Task<ActionResult<List<Video>>> ListVideos([Required] int take, [Required] int page, OrderVideosBy orderBy = OrderVideosBy.CreationDate, bool descending = true, string search = "")
+        public async Task<ActionResult<List<Video>>> ListVideos([Required] int take, [Required] int page, OrderVideosBy orderBy = OrderVideosBy.CreationDate, bool descending = true, string? search = "")
         {
             return Ok(await videosService.GetVideosAsync(take, page, orderBy, descending, search));
         }
@@ -108,7 +106,7 @@ namespace YT_DLP_Web_App_Backend.Controllers
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(VideoDimensions))]
         public async Task<ActionResult<VideoDimensions>> GetMaxDimensions(string videoUrl)
         {
-            DataObjects.VideoDimensions videoDimensions = await ytDlpService.GetMaxVideoResolutionAsync(videoUrl);
+            VideoDimensions videoDimensions = await ytDlpService.GetMaxVideoResolutionAsync(videoUrl);
 
             return Ok(videoDimensions);
         }
