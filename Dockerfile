@@ -30,10 +30,10 @@ COPY --from=yt-dlp-web-frontend-builder /app/frontend/build /app/yt-dlp-web/back
 COPY --from=yt-dlp-web-backend-builder /app/backend/bin/docker-release/linux-x64 /app/yt-dlp-web/backend
 
 RUN chmod +x /app/yt-dlp-web/backend/YT-DLP-Web-App-Backend
-RUN apk update
-RUN apk upgrade
-RUN apk add --no-cache ffmpeg
-RUN apk add --no-cache yt-dlp
+RUN apt-get update
+RUN apt-get upgrade -y
+RUN apt-get install -y ffmpeg yt-dlp
+RUN apt-get clean
 
 EXPOSE 41001
 
