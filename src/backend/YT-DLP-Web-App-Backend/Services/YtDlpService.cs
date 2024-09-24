@@ -1,20 +1,16 @@
-﻿using System.Diagnostics;
-using static System.Runtime.InteropServices.JavaScript.JSType;
-using System.Text.Json;
-using YT_DLP_Web_App_Backend.Database.Entities;
+﻿using YT_DLP_Web_App_Backend.Database.Entities;
 using YT_DLP_Web_App_Backend.DataObjects;
 using YoutubeDLSharp;
 using YT_DLP_Web_App_Backend.Constants;
 using YoutubeDLSharp.Metadata;
 using YoutubeDLSharp.Options;
 using YT_DLP_Web_App_Backend.Helpers;
-using Microsoft.Extensions.Options;
 using YT_DLP_Web_App_Backend.Database;
 using Microsoft.EntityFrameworkCore;
 
 namespace YT_DLP_Web_App_Backend.Services
 {
-    public class YtDlpService(VideosService videosService, VideoDbContext videoDbContext)
+    public class YtDlpService(VideoDbContext videoDbContext)
     {
         public async Task<VideoDimensions> GetMaxVideoResolutionAsync(string url)
         {
@@ -25,7 +21,7 @@ namespace YT_DLP_Web_App_Backend.Services
 
             string stdOutput = "";
             YoutubeDLProcess ytdlProc = new(DependenciesHelper.YtDlpPath);
-            ytdlProc.OutputReceived += (o, e) => { stdOutput += e.Data + "\n"; };
+            ytdlProc.OutputReceived += (_, e) => { stdOutput += e.Data + "\n"; };
 
             OptionSet options = new()
             {
@@ -82,7 +78,7 @@ namespace YT_DLP_Web_App_Backend.Services
         public async Task DownloadVideoAsync(string url, string videoName, int videoId, VideoDimensions? dimensions,
             CancellationToken cancellationToken = default)
         {
-            Video? videoRecord = await videoDbContext.Videos.FirstOrDefaultAsync(x => x.Id == videoId) ??
+            Video videoRecord = await videoDbContext.Videos.FirstOrDefaultAsync(x => x.Id == videoId) ??
                                  throw new Exception(
                                      "No existing video record found when attempting to download the video.");
             try

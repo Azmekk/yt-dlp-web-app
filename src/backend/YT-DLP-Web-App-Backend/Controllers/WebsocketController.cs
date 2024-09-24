@@ -1,7 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SignalR.Protocol;
-using System.Collections;
-using System.Diagnostics;
 using System.Net.WebSockets;
 using System.Text;
 using System.Text.Json;
@@ -19,9 +16,8 @@ namespace YT_DLP_Web_App_Backend.Controllers
             if(HttpContext.WebSockets.IsWebSocketRequest)
             {
                 using var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
-                var socketFinishedTcs = new TaskCompletionSource<object>();
 
-                OnVideoDownloadUpdated videoDownloadHandler = async (int videoId, VideoDownloadInfo videoInfo) =>
+                OnVideoDownloadUpdated videoDownloadHandler = (int videoId, VideoDownloadInfo videoInfo) =>
                 {
                     if(webSocket.State == WebSocketState.Open)
                     {
@@ -46,7 +42,7 @@ namespace YT_DLP_Web_App_Backend.Controllers
                     var receivedBytes = new byte[1024];
                     try
                     {
-                        var result = await webSocket.ReceiveAsync(receivedBytes, cts.Token);
+                        await webSocket.ReceiveAsync(receivedBytes, cts.Token);
                     }
                     catch(Exception)
                     {
@@ -55,7 +51,7 @@ namespace YT_DLP_Web_App_Backend.Controllers
 
                     if(receivedBytes.Length > 0)
                     {
-                        string message = System.Text.Encoding.UTF8.GetString(receivedBytes);
+                        string message = Encoding.UTF8.GetString(receivedBytes);
                         if(message.Equals("renew", StringComparison.CurrentCultureIgnoreCase))
                         {
                             cts.CancelAfter(TimeSpan.FromMinutes(5));

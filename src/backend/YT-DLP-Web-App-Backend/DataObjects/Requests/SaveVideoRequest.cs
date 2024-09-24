@@ -1,8 +1,8 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
+using System.ComponentModel.DataAnnotations;
 
 namespace YT_DLP_Web_App_Backend.DataObjects.Requests
 {
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
     public class SaveVideoRequest
     {
         [Required]
@@ -11,5 +11,4 @@ namespace YT_DLP_Web_App_Backend.DataObjects.Requests
         public string VideoName { get; set; }
         public VideoDimensions? VideoDimensions { get; set; }
     }
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 }
