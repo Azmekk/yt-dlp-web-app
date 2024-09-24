@@ -22,7 +22,7 @@ COPY ./src/backend/YT-DLP-Web-App-Backend ./
 RUN dotnet restore
 RUN dotnet publish -c Release -r linux-x64 --self-contained true -o "./bin/docker-release/linux-x64" -p:PublishSingleFile=true "YT-DLP-Web-App-Backend.csproj"
 
-FROM debian:stable-slim
+FROM ubuntu:latest
 
 WORKDIR /app/yt-dlp-web
 
