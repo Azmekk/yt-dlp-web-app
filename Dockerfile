@@ -32,7 +32,7 @@ COPY --from=yt-dlp-web-backend-builder /app/backend/bin/docker-release/linux-x64
 RUN chmod +x /app/yt-dlp-web/backend/YT-DLP-Web-App-Backend
 RUN apt-get update
 RUN apt-get upgrade -y
-RUN apt-get install -y --no-install-recommends libssl-dev libicu-dev
+RUN apt-get install -y --no-install-recommends ffmpeg yt-dlp
 RUN apt-get clean
 
 EXPOSE 41001
