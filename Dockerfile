@@ -26,9 +26,10 @@ FROM alpine:latest
 
 WORKDIR /app/yt-dlp-web
 
-COPY --from=yt-dlp-web-frontend-builder /app/frontend/build ./backend/Static
-COPY --from=yt-dlp-web-backend-builder /app/backend/bin/docker-release/linux-x64 ./backend
+COPY --from=yt-dlp-web-frontend-builder /app/frontend/build /app/yt-dlp-web/backend/Static
+COPY --from=yt-dlp-web-backend-builder /app/backend/bin/docker-release/linux-x64 /app/yt-dlp-web/backend
 
+RUN chmod +x /app/yt-dlp-web/backend/YT-DLP-Web-App-Backend
 RUN apk update
 RUN apk upgrade
 RUN apk add --no-cache ffmpeg
@@ -36,4 +37,4 @@ RUN apk add --no-cache yt-dlp
 
 EXPOSE 41001
 
-CMD ["./backend/YT-DLP-Web-App-Backend"]
+CMD ["/app/yt-dlp-web/backend/YT-DLP-Web-App-Backend"]
