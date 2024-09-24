@@ -171,9 +171,8 @@
 	onMount(async () => {
 		await updateVideoInfoAsync();
 
-		let baseUrl = new URL(BASE_PATH);
 		webSocketService = new WebSocketService(
-			`${baseUrl.protocol == "https" ? "wss" : "ws"}://${baseUrl.hostname + ':' + baseUrl.port + '/ws'}`,
+			`${window.location.protocol == "https" ? "wss" : "ws"}://${window.location.hostname + ':' + window.location.port + '/ws'}`,
 			handleIncomingSocketMessage
 		);
 		webSocketService.connect();

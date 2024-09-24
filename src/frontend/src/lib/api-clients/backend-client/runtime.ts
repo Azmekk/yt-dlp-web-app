@@ -13,7 +13,7 @@
  */
 
 
-export const BASE_PATH = window.location.protocol + "//" + window.location.host
+export const BASE_PATH = "" 
 
 export interface ConfigurationParameters {
     basePath?: string; // override base path
