@@ -20,7 +20,7 @@
 [![License][license-shield]][license-url]
 [![LinkedIn][linkedin-shield]][linkedin-url]
 
-[![Go][Go]][Go-url]
+[![dotNET][dotNET]][dotNET-url]
 [![TypeScript][TypeScript]][TypeScript-url]
 [![Svelte][Svelte]][Svelte-url]
 [![TailwindCSS][TailwindCSS]][TailwindCSS-url]
@@ -46,21 +46,9 @@ It features both light and dark themes and is designed with a mobile-friendly la
 If don't want to use docker, you can do the following: 
 1. Download the application **for your platform** as a zip file from the [latest release](https://github.com/Azmekk/yt-dlp-web-app/releases/latest) 
 2. Extract the zip using something like [7zip](https://www.7-zip.org/).
-3. If you do not have YT-DLP or FFMPEG on path or don't know what they are run `start.bat` to download dependencies.
-4. Run the executable called `backend.exe` **(It will automatically run if you did step 3)** to access the UI at http://localhost:41001
+4. Run the file called `YT-DLP-Web-App-Backend.exe` and access the UI at http://localhost:41001
 
 By default, the app will create necessary files in the same directory as the executable. To customize their locations, edit the .env file in the executable's directory. Here’s a breakdown:
-
-```env
-# Directory where videos will be downloaded
-DEFAULT_DOWNLOAD_DIR=/path/to/downloads
-
-# Directory where the database files are going to be stored.
-DEFAULT_DATABASE_DIR=/path/to/database
-
-# RECOMMENDED TO LEAVE THIS EMTPY. Directory for static HTML content which is served by the app. By default that is the directory named static in the downloaded zip.
-DEFAULT_STATIC_DIR=/path/to/static
-```
 
 ## Docker Deployment
 
@@ -115,8 +103,8 @@ services:
 [license-url]: https://github.com/Azmekk/yt-dlp-web-app/blob/master/LICENSE.txt
 [linkedin-shield]: https://img.shields.io/badge/-LinkedIn-black.svg?style=for-the-badge&logo=linkedin&colorB=555
 [linkedin-url]: https://linkedin.com/in/Martin-Y
-[Go]: https://img.shields.io/badge/go-%2300ADD8.svg?style=for-the-badge&logo=go&logoColor=white
-[Go-url]: https://go.dev/
+[dotNET]: https://img.shields.io/badge/.NET-512BD4?style=for-the-badge&logo=.net&logoColor=white
+[dotNET-url]: https://dotnet.microsoft.com/en-us/
 [TypeScript]: https://img.shields.io/badge/typescript-%23007ACC.svg?style=for-the-badge&logo=typescript&logoColor=white
 [TypeScript-url]: https://www.typescriptlang.org/
 [Svelte]: https://img.shields.io/badge/svelte-%23FF3E00.svg?style=for-the-badge&logo=svelte&logoColor=white
