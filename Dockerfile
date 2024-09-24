@@ -20,7 +20,7 @@ WORKDIR /app/backend
 COPY ./src/backend/YT-DLP-Web-App-Backend ./
 
 RUN dotnet restore
-RUN dotnet publish -c Release -r linux-x64 -o "./bin/docker-release/linux-x64" "YT-DLP-Web-App-Backend.csproj"
+RUN dotnet publish -c Release -r linux-x64 --self-contained true -o "./bin/docker-release/linux-x64" "YT-DLP-Web-App-Backend.csproj"
 
 FROM ubuntu:latest
 
@@ -32,7 +32,7 @@ COPY --from=yt-dlp-web-backend-builder /app/backend/bin/docker-release/linux-x64
 RUN chmod +x /app/yt-dlp-web/backend/YT-DLP-Web-App-Backend
 RUN apt-get update
 RUN apt-get upgrade -y
-RUN apt-get install -y --no-install-recommends ffmpeg yt-dlp
+RUN apt-get install -y --no-install-recommends libssl-dev libicu-dev
 RUN apt-get clean
 
 EXPOSE 41001
