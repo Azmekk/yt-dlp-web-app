@@ -20,9 +20,9 @@ WORKDIR /app/backend
 COPY ./src/backend/YT-DLP-Web-App-Backend ./
 
 RUN dotnet restore
-RUN dotnet publish -c Release -r linux-x64 --self-contained true -o "./bin/docker-release/linux-x64" -p:PublishSingleFile=true "YT-DLP-Web-App-Backend.csproj"
+RUN dotnet publish -c Release -r linux-x64 -o "./bin/docker-release/linux-x64" "YT-DLP-Web-App-Backend.csproj"
 
-FROM ubuntu:latest
+FROM mcr.microsoft.com/dotnet/runtime:9.0
 
 WORKDIR /app/yt-dlp-web
 
@@ -30,6 +30,8 @@ COPY --from=yt-dlp-web-frontend-builder /app/frontend/build /app/yt-dlp-web/back
 COPY --from=yt-dlp-web-backend-builder /app/backend/bin/docker-release/linux-x64 /app/yt-dlp-web/backend
 
 RUN chmod +x /app/yt-dlp-web/backend/YT-DLP-Web-App-Backend
+RUN apt-get update
+RUN apt-get upgrade -y
 
 EXPOSE 41001
 
