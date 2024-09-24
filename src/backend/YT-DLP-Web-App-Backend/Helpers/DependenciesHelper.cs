@@ -67,18 +67,16 @@ namespace YT_DLP_Web_App_Backend.Helpers
 
             if(depsPresentLocally)
             {
-                UseLocalExecutables = true;
                 return true;
             }
 
             if(depsPresentOnPath)
             {
-                UseLocalExecutables = false;
                 return true;
             }
 
-            await YoutubeDLSharp.Utils.DownloadYtDlp();
-            await YoutubeDLSharp.Utils.DownloadFFmpeg();
+            await YoutubeDLSharp.Utils.DownloadYtDlp(Path.GetDirectoryName(YtDlpPath));
+            await YoutubeDLSharp.Utils.DownloadFFmpeg(Path.GetDirectoryName(FfmpegPath));
 
             UseLocalExecutables = true;
             return true;
