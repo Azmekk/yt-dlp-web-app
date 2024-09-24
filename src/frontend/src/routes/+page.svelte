@@ -172,7 +172,7 @@
 		await updateVideoInfoAsync();
 
 		webSocketService = new WebSocketService(
-			`${window.location.protocol == "https" ? "wss" : "ws"}://${window.location.hostname + ':' + window.location.port + '/ws'}`,
+			`${window.location.protocol == "https:" ? "wss" : "ws"}://${window.location.hostname + ':' + window.location.port + '/ws'}`,
 			handleIncomingSocketMessage
 		);
 		webSocketService.connect();
