@@ -68,7 +68,7 @@ namespace YT_DLP_Web_App_Backend
             app.UseWebSockets(webSocketOptions);
             app.UseCors("Default");
             
-            app.Run("http://localhost:41001");
+            app.Run("http://*:41001");
         }
 
         private static void CreateRequiredDirsIfNotExist()
