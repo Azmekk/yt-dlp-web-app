@@ -1,4 +1,5 @@
-﻿using YT_DLP_Web_App_Backend.Database.Entities;
+﻿using Hangfire;
+using YT_DLP_Web_App_Backend.Database.Entities;
 using YT_DLP_Web_App_Backend.DataObjects;
 using YoutubeDLSharp;
 using YT_DLP_Web_App_Backend.Constants;
@@ -75,6 +76,7 @@ namespace YT_DLP_Web_App_Backend.Services
             return runResult.Data;
         }
 
+        [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Fail)]
         public async Task DownloadVideoAsync(string url, string videoName, int videoId, VideoDimensions? dimensions,
             CancellationToken cancellationToken = default)
         {
@@ -100,7 +102,7 @@ namespace YT_DLP_Web_App_Backend.Services
                 string requestedFormat;
                 if (dimensions != null && dimensions.Height > 0 && dimensions.Width > 0)
                 {
-                    requestedFormat = $"bestvideo[height={dimensions.Height}][width={dimensions.Width}]+bestaudio/best";
+                    requestedFormat = $"bestvideo[height<={dimensions.Height}][width<={dimensions.Width}]+bestaudio/best";
                 }
                 else
                 {
@@ -116,11 +118,10 @@ namespace YT_DLP_Web_App_Backend.Services
                 {
                     Output = Path.Join(AppConstants.DefaultDownloadDir, videoName + ".%(ext)s"),
                     WriteThumbnail = true,
-                    MergeOutputFormat = DownloadMergeFormat.Mp4,
                     Format = requestedFormat,
-                    RecodeVideo = VideoRecodeFormat.Mp4,
-                    ConvertThumbnails = "jpg",
                 };
+                
+                options.AddCustomOption("-S", "vcodec:h264,res,acodec:aac");
 
                 RunResult<string> result = await ytdl.RunVideoDownload(url, progress: progress, ct: cancellationToken,
                     overrideOptions: options);
