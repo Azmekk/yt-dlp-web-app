@@ -2,19 +2,10 @@
 	import { VideosApi } from '$lib/api-clients/backend-client';
 	import type { VideoDimensions } from '$lib/api-clients/backend-client/models';
 
-
 	import { getFormattedVideoName, getResolutionDimensions } from '$lib/utils';
-	import { mdiCancel, mdiDownload, mdiPlus } from '@mdi/js';
+	import { mdiCancel, mdiDownload, mdiPlus, mdiAutorenew } from '@mdi/js';
 	import { createEventDispatcher } from 'svelte';
-	import {
-		Button,
-		Dialog,
-		Field,
-		Input,
-		SelectField,
-		Switch,
-		type MenuOption
-	} from 'svelte-ux';
+	import { Button, Dialog, Field, Input, SelectField, Switch, type MenuOption } from 'svelte-ux';
 
 	const dispatch = createEventDispatcher();
 
@@ -63,15 +54,14 @@
 		{
 			value: 144,
 			label: '144p (256x144)'
-		},
-		
+		}
 	];
 	let selectedDimension = 1080;
 	let dimensionsToggle = false;
 	let maxDimension = 2160;
 
 	let dialogLoading = false;
-	let selectedFormat: string = 'mp4';
+	//let selectedFormat: string = 'mp4';
 	let videoUrl: string = '';
 	let fileName: string = '';
 
@@ -82,7 +72,7 @@
 			width: 0,
 			height: 0
 		};
-		selectedFormat = 'mp4';
+		//selectedFormat = 'mp4';
 		videoUrl = '';
 		fileName = '';
 		downloadVideoDialogOpen = false;
@@ -98,8 +88,11 @@
 		let videoApi = new VideosApi();
 
 		try {
-			var nameResponse = await videoApi.apiVideosGetNameGet({videoUrl: videoUrl});
-			fileName = (nameResponse == null || nameResponse.name == null || nameResponse.name == "") ? getFormattedVideoName() : nameResponse?.name.substring(0, 80);
+			var nameResponse = await videoApi.apiVideosGetNameGet({ videoUrl: videoUrl });
+			fileName =
+				nameResponse == null || nameResponse.name == null || nameResponse.name == ''
+					? getFormattedVideoName()
+					: nameResponse?.name.substring(0, 80);
 		} catch (error) {
 			alert('Failed to fetch video name.');
 			console.error(error);
@@ -107,14 +100,14 @@
 	}
 
 	async function fetchDimensionsAsync() {
-		if (!dimensionsToggle || videoUrl == "") {
+		if (!dimensionsToggle || videoUrl == '') {
 			return;
 		}
 
 		let videoApi = new VideosApi();
 
 		try {
-			var dimensionsResponse = await videoApi.apiVideosGetMaxDimensionsGet({videoUrl: videoUrl});
+			var dimensionsResponse = await videoApi.apiVideosGetMaxDimensionsGet({ videoUrl: videoUrl });
 			maxDimension = dimensionsResponse.height ?? 2160;
 		} catch (error) {
 			alert('Failed to fetch video max dimensions.');
@@ -124,7 +117,6 @@
 
 	async function getVideoInfoAsync() {
 		dialogLoading = true;
-		await fetchNameAsync();
 		if (dimensionsToggle) {
 			await fetchDimensionsAsync();
 		}
@@ -138,31 +130,47 @@
 		try {
 			if (dimensionsToggle) {
 				//videoUrl, fileName, selectedFormat, selectedDimension
-				await videoApi.apiVideosSaveVideoPost({ saveVideoRequest: {videoUrl, videoName: fileName, videoDimensions: getResolutionDimensions(selectedDimension) ?? undefined}});
+				await videoApi.apiVideosSaveVideoPost({
+					saveVideoRequest: {
+						videoUrl,
+						videoName: fileName,
+						videoDimensions: getResolutionDimensions(selectedDimension) ?? undefined
+					}
+				});
+			} else {
+				await videoApi.apiVideosSaveVideoPost({
+					saveVideoRequest: { videoUrl, videoName: fileName }
+				});
 			}
-			else{
-				await videoApi.apiVideosSaveVideoPost({ saveVideoRequest: {videoUrl, videoName: fileName}});
-			}
-			
 		} catch (error) {
-			alert("Video save failed.");
-			dispatch('videoSaveFail', {error: error});
+			alert('Video save failed.');
+			dispatch('videoSaveFail', { error: error });
 			console.error(error);
 		} finally {
 			dispatch('videoSaved');
 			clearDialogFieldsAndClose();
 		}
 	}
+
+	let generateNameButtonLoading = false;
 </script>
 
 <div class="fixed bottom-10 md:bottom-15 right-2 md:right-10 p-4 z-10">
-	<Button class="text-slate-100" size="lg" on:click={() => (downloadVideoDialogOpen = true)} icon={mdiPlus} rounded="full" variant="fill" color="primary" >New Video</Button>
+	<Button
+		class="text-slate-100"
+		size="lg"
+		on:click={() => (downloadVideoDialogOpen = true)}
+		icon={mdiPlus}
+		rounded="full"
+		variant="fill"
+		color="primary">New Video</Button
+	>
 </div>
 
 <div class="w-full absolute">
 	<Dialog
 		loading={dialogLoading || saveVideoButtonLoading}
-		class="p-5 w-full sm:w-1/2 xl:w-1/3"
+		class="p-5 w-full sm:w-3/4 2xl:w-1/3"
 		bind:open={downloadVideoDialogOpen}
 		on:close={clearDialogFieldsAndClose}
 	>
@@ -178,50 +186,52 @@
 				</Field>
 			</div>
 
-			<div class="flex w-full mb-5">
-				<Field class="w-full mr-2" label="File name" labelPlacement="top">
+			<div class="flex w-full mb-2">
+				<Field class="w-full" label="File name" labelPlacement="top">
 					<Input bind:value={fileName} required={true} placeholder="video_name_example" />
 				</Field>
-				<div>
-					<SelectField
-						required={true}
-						placeholder="eg. mp4"
-						bind:value={selectedFormat}
-						options={formatOptions}
-						label="Media format"
-						labelPlacement="top"
-						clearable={false}
-					></SelectField>
-				</div>
 			</div>
 
-			{#if (selectedFormat == 'mp4')}
-				<div class="w-full mb-5">
-					<div class="mb-1">
-						<div class="pl-0.5 text-sm">Select dimensions</div>
-						<Switch
-							on:change={async () => {
-								dialogLoading = true;
-								await fetchDimensionsAsync();
-								dialogLoading = false;
-							}}
-							bind:checked={dimensionsToggle}
-						/>
-					</div>
-					{#if dimensionsToggle}
-						<div>
-							<SelectField
-								required={dimensionsToggle}
-								placeholder="eg. 1080p"
-								bind:value={selectedDimension}
-								options={resolutionOptions.filter((x) => x.value <= maxDimension)}
-								label="Media dimensions"
-								labelPlacement="top"
-							></SelectField>
-						</div>
-					{/if}
+			<div class="mb-4 w-full">
+				<Button
+					variant="fill"
+					color="accent"
+					icon={mdiAutorenew}
+					class="text-slate-100 mr-1 w-full"
+					loading={generateNameButtonLoading}
+					on:click={async () => {
+						generateNameButtonLoading = true;
+						await fetchNameAsync();
+						generateNameButtonLoading = false;
+					}}>Generate Name</Button
+				>
+			</div>
+
+			<div class="w-full mb-5">
+				<div class="mb-1">
+					<div class="pl-0.5 text-sm">Select dimensions</div>
+					<Switch
+						on:change={async () => {
+							dialogLoading = true;
+							await fetchDimensionsAsync();
+							dialogLoading = false;
+						}}
+						bind:checked={dimensionsToggle}
+					/>
 				</div>
-			{/if}
+				{#if dimensionsToggle}
+					<div>
+						<SelectField
+							required={dimensionsToggle}
+							placeholder="eg. 1080p"
+							bind:value={selectedDimension}
+							options={resolutionOptions.filter((x) => x.value <= maxDimension)}
+							label="Media dimensions"
+							labelPlacement="top"
+						></SelectField>
+					</div>
+				{/if}
+			</div>
 
 			<div class="flex justify-center sm:justify-start">
 				<Button

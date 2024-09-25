@@ -210,19 +210,19 @@ namespace YT_DLP_Web_App_Backend.Services
                 File.Move(thumbnailPath, newThumbnailPath);
             }
 
-            if(video.Mp3FileName != null)
+            if(!string.IsNullOrEmpty(video.Mp3FileName))
             {
-                string mp3Name = Path.Join(AppConstants.DefaultDownloadDir, video.Mp3FileName);
-                var mp3Path = Path.Join(AppConstants.DefaultDownloadDir, newThumbnailName);
+                var mp3Path = Path.Join(AppConstants.DefaultDownloadDir, video.Mp3FileName);
 
                 string newMp3Name = videoNameNoExtension + Path.GetExtension(video.Mp3FileName);
                 string newMp3Path = Path.Join(AppConstants.DefaultDownloadDir, newMp3Name);
-                if(File.Exists(thumbnailPath))
+                
+                if(File.Exists(mp3Path))
                 {
                     File.Move(mp3Path, newMp3Path);
                 }
 
-                video.Mp3FileName = mp3Name;
+                video.Mp3FileName = newMp3Name;
             }
             
 

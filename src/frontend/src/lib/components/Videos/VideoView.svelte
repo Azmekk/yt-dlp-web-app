@@ -53,10 +53,10 @@
 		editButtonLoading = true;
 		let videosApi = new VideosApi();
 		try {
-			await videosApi.apiVideosUpdateVideoNamePatch({
+			var renamedVideo = await videosApi.apiVideosUpdateVideoNamePatch({
 				updateVideoNameRequest: { videoId: video.id, newName }
 			});
-			video.fileName = newName;
+			video = renamedVideo;
 			dispatch('videoModified');
 			clearNameEditInputs();
 		} catch (error) {
