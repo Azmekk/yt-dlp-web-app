@@ -81,7 +81,24 @@ services:
       - /hostpath/downloads:/app/yt-dlp-web/backend/Downloads
       - /hostpath/database:/app/yt-dlp-web/backend/Database
     restart: unless-stopped
-``` 
+```
+
+# Migrating from old go based release
+
+(You only need to do this once and only if you have previously used the golang version of the app.)
+
+If you use docker, the commands have also changed slightly so first review those.
+
+1. **BACKUP YOUR OLD DATABASE**
+2. Run the new version at least once to generate an empty DB file which you can find in the `/Database` directory
+3. Go to the [migrator release page](https://github.com/Azmekk/yt-dlp-web-app/releases/tag/v1.0-DatabaseMigrator) and grab the latest one for your paltform.
+4. Copy the old and new database files somewhere convenient for you, run the migrator and follow the prompts.
+5. The app will make 2 backup copies of both files just in case which you can later delete.
+6. If you provided both files correctly, the app should migrate the data to the newer (Which should have been the auto generated one from step 2)
+7. Move the new database file back to the `/Database` directory of your application.
+8. Copy all old videos to the new /Videos directory (For docker instances, this step shouldn't be required)
+8. Migration complete. You should now see all of your old videos.
+
 
 ## Bugs, issues, questions and requests
 
