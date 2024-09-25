@@ -15,7 +15,7 @@ dotnet restore
 
 dotnet publish -c Release -r win-x64 --self-contained true -o "$OUTPUT_DIR/win-x64" -p:PublishSingleFile=true "$APP_NAME.csproj" || exit 1
 dotnet publish -c Release -r linux-x64 --self-contained true -o "$OUTPUT_DIR/linux-x64" -p:PublishSingleFile=true "$APP_NAME.csproj" || exit 1
-dotnet publish -c Release -r win-arm64 --self-contained true -o "$OUTPUT_DIR/windows-arm64" -p:PublishSingleFile=true "$APP_NAME.csproj" || exit 1
+dotnet publish -c Release -r win-arm64 --self-contained true -o "$OUTPUT_DIR/win-arm64" -p:PublishSingleFile=true "$APP_NAME.csproj" || exit 1
 dotnet publish -c Release -r linux-arm64 --self-contained true -o "$OUTPUT_DIR/linux-arm64" -p:PublishSingleFile=true "$APP_NAME.csproj" || exit 1
 
 echo "Done!"
