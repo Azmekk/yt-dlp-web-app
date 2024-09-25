@@ -83,7 +83,9 @@ services:
     restart: unless-stopped
 ```
 
-# Migrating from old release
+# Migrating from old go based release
+
+(You only need to do this once and only if you have previously used the golang version of the app.)
 
 1. **BACKUP YOUR OLD DATABASE**
 2. Run the new version at least once to generate an empty DB file which you can find in the `/Database` directory
