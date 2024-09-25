@@ -15,6 +15,7 @@ namespace YT_DLP_Web_App_Backend
         public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
+            builder.WebHost.UseUrls("http://*:41001");
 
             if (!await DependenciesHelper.VerifyOrInstallDependenciesAsync())
             {
@@ -74,8 +75,9 @@ namespace YT_DLP_Web_App_Backend
                 FileProvider = new PhysicalFileProvider(AppConstants.DefaultDownloadDir),
                 EnableDirectoryBrowsing = false,
             });
-            
-            app.Run("http://*:41001");
+
+            await app.RunAsync();
+            await app.WaitForShutdownAsync();
         }
 
         private static void CreateRequiredDirsIfNotExist()
