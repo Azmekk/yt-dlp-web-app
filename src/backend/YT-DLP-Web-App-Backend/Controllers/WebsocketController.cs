@@ -17,7 +17,7 @@ namespace YT_DLP_Web_App_Backend.Controllers
             {
                 using var webSocket = await HttpContext.WebSockets.AcceptWebSocketAsync();
 
-                OnVideoDownloadUpdated videoDownloadHandler = (int videoId, VideoDownloadInfo videoInfo) =>
+                OnVideoDownloadUpdated videoDownloadHandler = (VideoDownloadInfo videoInfo) =>
                 {
                     if(webSocket.State == WebSocketState.Open)
                     {
@@ -32,8 +32,25 @@ namespace YT_DLP_Web_App_Backend.Controllers
                         });
                     }
                 };
+                
+                OnMp3Converted mp3ConversionHandler = (Mp3ConvertedInfo mp3ConversionInfo) =>
+                {
+                    if(webSocket.State == WebSocketState.Open)
+                    {
+                        //Wrapper because otherwise messages get polled for some reason.
+                        _ = Task.Run(async () =>
+                        {
+                            await webSocket.SendAsync(
+                                Encoding.ASCII.GetBytes(JsonSerializer.Serialize(mp3ConversionInfo)),
+                                WebSocketMessageType.Text,
+                                endOfMessage: true,
+                                cancellationToken: default);
+                        });
+                    }
+                };
 
-                VideosInProgressStorage.AddVideoDownloadUpdatedHandler(videoDownloadHandler);
+                MediaInProgressStorage.AddVideoDownloadUpdatedHandler(videoDownloadHandler);
+                MediaInProgressStorage.AddMp3ConversionUpdateHandler(mp3ConversionHandler);
 
                 var cts = new CancellationTokenSource(TimeSpan.FromMinutes(5));
 
@@ -64,7 +81,8 @@ namespace YT_DLP_Web_App_Backend.Controllers
                     await webSocket.CloseAsync(WebSocketCloseStatus.NormalClosure, "", default);
                 }
                 
-                VideosInProgressStorage.RemoveVideoDownloadUpdatedHandler(videoDownloadHandler);
+                MediaInProgressStorage.RemoveVideoDownloadUpdatedHandler(videoDownloadHandler);
+                MediaInProgressStorage.RemoveM3ConversionUpdateHandler(mp3ConversionHandler);
             }
             else
             {

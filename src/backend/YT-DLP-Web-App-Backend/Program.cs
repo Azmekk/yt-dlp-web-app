@@ -52,12 +52,6 @@ namespace YT_DLP_Web_App_Backend
 
             app.UseAuthorization();
             
-            app.UseFileServer(new FileServerOptions()
-            {
-                FileProvider = new PhysicalFileProvider(AppConstants.DefaultStaticDir),
-                EnableDirectoryBrowsing = false,
-            });
-            
             app.MapControllers();
 
             var webSocketOptions = new WebSocketOptions()
@@ -67,6 +61,19 @@ namespace YT_DLP_Web_App_Backend
 
             app.UseWebSockets(webSocketOptions);
             app.UseCors("Default");
+            
+            app.UseFileServer(new FileServerOptions()
+            {
+                FileProvider = new PhysicalFileProvider(AppConstants.DefaultStaticDir),
+                EnableDirectoryBrowsing = false,
+            });
+            
+            app.UseFileServer(new FileServerOptions()
+            {
+                RequestPath = "/Downloads",
+                FileProvider = new PhysicalFileProvider(AppConstants.DefaultDownloadDir),
+                EnableDirectoryBrowsing = false,
+            });
             
             app.Run("http://*:41001");
         }

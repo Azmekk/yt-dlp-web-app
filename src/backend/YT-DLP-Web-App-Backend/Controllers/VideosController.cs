@@ -38,6 +38,7 @@ namespace YT_DLP_Web_App_Backend.Controllers
 
             //Create video record so it exists on returned request.
             Video video = await videosService.CreateInitialVideoRecord(request.VideoUrl, request.VideoName + ".mp4");
+            
             BackgroundJob.Enqueue(() => ytDlpService.DownloadVideoAsync(request.VideoUrl, request.VideoName, video.Id, request.VideoDimensions, default));
 
             return Ok();
@@ -55,36 +56,6 @@ namespace YT_DLP_Web_App_Backend.Controllers
         public async Task<ActionResult<VideoCountResponse>> GetVideoCount()
         {
             return Ok(new VideoCountResponse { Count = await videosService.GetVideoCount() });
-        }
-
-        [HttpGet]
-        [SwaggerResponse((int)HttpStatusCode.NotFound)]
-        [SwaggerResponse((int)HttpStatusCode.OK)]
-        public async Task<ActionResult> GetVideo([Required] string videoName)
-        {
-            byte[]? fileBytes = await videosService.GetFileFromDownloadDir(videoName);
-
-            if(fileBytes == null || fileBytes.Length == 0)
-            {
-                return NotFound();
-            }
-
-            return File(fileBytes, "video/mp4", videoName);
-        }
-
-        [HttpGet]
-        [SwaggerResponse((int)HttpStatusCode.OK)]
-        [SwaggerResponse((int)HttpStatusCode.NotFound)]
-        public async Task<ActionResult> GetThumbnail([Required] string thumbnailName)
-        {
-            byte[]? fileBytes = await videosService.GetFileFromDownloadDir(thumbnailName);
-
-            if(fileBytes == null || fileBytes.Length == 0)
-            {
-                return NotFound();
-            }
-
-            return File(fileBytes, "image/jpg", thumbnailName);
         }
 
         [HttpGet]
@@ -112,10 +83,11 @@ namespace YT_DLP_Web_App_Backend.Controllers
         }
 
         [HttpGet]
-        [SwaggerResponse((int)HttpStatusCode.OK)]
+        [Produces("audio/mp3")]
+        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(FileContentResult))]
         [SwaggerResponse((int)HttpStatusCode.NotFound)]
         [SwaggerResponse((int)HttpStatusCode.InternalServerError)]
-        public async Task<ActionResult> GetMp3([Required] int videoId)
+        public async Task<ActionResult> GenerateMp3([Required] int videoId)
         {
             try
             {
@@ -192,7 +164,7 @@ namespace YT_DLP_Web_App_Backend.Controllers
         [SwaggerResponse((int)HttpStatusCode.NotFound)]
         public ActionResult<VideoDownloadInfo> GetVideoDownloadInfo([Required] int videoId)
         {
-            var result = VideosInProgressStorage.GetVideoInfo(videoId);
+            var result = MediaInProgressStorage.GetVideoInfo(videoId);
 
             if(result == null)
             {

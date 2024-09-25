@@ -149,8 +149,17 @@ namespace YT_DLP_Web_App_Backend.Services
             string existingVideoPath = Path.Join(AppConstants.DefaultDownloadDir, video.Mp3FileName);
             if(video.Mp3FileName != null && File.Exists(existingVideoPath))
             {
+                if (video.Mp3Status != Mp3Status.Completed)
+                {
+                    video.Mp3Status = Mp3Status.Completed;
+                    await videoDbContext.SaveChangesAsync();
+                }
+                
                 return (await File.ReadAllBytesAsync(existingVideoPath), video.Mp3FileName);
             }
+
+            video.Mp3Status = Mp3Status.InProgress;
+            await videoDbContext.SaveChangesAsync();
 
             string videoNameNoExtension = video.FileName.TrimEnd(Path.GetExtension(video.FileName));
             string mp3Name = videoNameNoExtension + ".mp3";
@@ -167,7 +176,10 @@ namespace YT_DLP_Web_App_Backend.Services
             await ffmpeg.ExecuteAsync($"-i \"{videoPath}\" -q:a 0 -map 0:a \"{mp3Path}\"", default);
 
             video.Mp3FileName = mp3Name;
+            video.Mp3Status = Mp3Status.Completed;
             await videoDbContext.SaveChangesAsync();
+            
+            MediaInProgressStorage.MarkMp3Converted(video.Id);
 
             return (await File.ReadAllBytesAsync(mp3Path), mp3Name);
         }

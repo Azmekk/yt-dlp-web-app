@@ -48,3 +48,8 @@ export interface VideoDownloadInfo {
     downloadPercent: number;
     downloaded: boolean;
 }
+
+export interface Mp3CompletionInfo {
+    videoId: number;
+    completed: boolean;
+}

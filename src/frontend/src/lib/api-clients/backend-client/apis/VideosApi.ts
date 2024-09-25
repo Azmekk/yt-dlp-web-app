@@ -47,28 +47,20 @@ export interface ApiVideosDeleteVideoDeleteRequest {
     videoId: number;
 }
 
-export interface ApiVideosGetMaxDimensionsGetRequest {
-    videoUrl?: string;
+export interface ApiVideosGenerateMp3GetRequest {
+    videoId: number;
 }
 
-export interface ApiVideosGetMp3GetRequest {
-    videoId: number;
+export interface ApiVideosGetMaxDimensionsGetRequest {
+    videoUrl?: string;
 }
 
 export interface ApiVideosGetNameGetRequest {
     videoUrl?: string;
 }
 
-export interface ApiVideosGetThumbnailGetRequest {
-    thumbnailName: string;
-}
-
 export interface ApiVideosGetVideoDownloadInfoGetRequest {
     videoId: number;
-}
-
-export interface ApiVideosGetVideoGetRequest {
-    videoName: string;
 }
 
 export interface ApiVideosGetVideoInfoGetRequest {
@@ -132,6 +124,41 @@ export class VideosApi extends runtime.BaseAPI {
 
     /**
      */
+    async apiVideosGenerateMp3GetRaw(requestParameters: ApiVideosGenerateMp3GetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<Blob>> {
+        if (requestParameters['videoId'] == null) {
+            throw new runtime.RequiredError(
+                'videoId',
+                'Required parameter "videoId" was null or undefined when calling apiVideosGenerateMp3Get().'
+            );
+        }
+
+        const queryParameters: any = {};
+
+        if (requestParameters['videoId'] != null) {
+            queryParameters['videoId'] = requestParameters['videoId'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/api/Videos/GenerateMp3`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.BlobApiResponse(response);
+    }
+
+    /**
+     */
+    async apiVideosGenerateMp3Get(requestParameters: ApiVideosGenerateMp3GetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<Blob> {
+        const response = await this.apiVideosGenerateMp3GetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
     async apiVideosGetMaxDimensionsGetRaw(requestParameters: ApiVideosGetMaxDimensionsGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<VideoDimensions>> {
         const queryParameters: any = {};
 
@@ -160,40 +187,6 @@ export class VideosApi extends runtime.BaseAPI {
 
     /**
      */
-    async apiVideosGetMp3GetRaw(requestParameters: ApiVideosGetMp3GetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        if (requestParameters['videoId'] == null) {
-            throw new runtime.RequiredError(
-                'videoId',
-                'Required parameter "videoId" was null or undefined when calling apiVideosGetMp3Get().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        if (requestParameters['videoId'] != null) {
-            queryParameters['videoId'] = requestParameters['videoId'];
-        }
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        const response = await this.request({
-            path: `/api/Videos/GetMp3`,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
-
-        return new runtime.VoidApiResponse(response);
-    }
-
-    /**
-     */
-    async apiVideosGetMp3Get(requestParameters: ApiVideosGetMp3GetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
-        await this.apiVideosGetMp3GetRaw(requestParameters, initOverrides);
-    }
-
-    /**
-     */
     async apiVideosGetNameGetRaw(requestParameters: ApiVideosGetNameGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<VideoNameResponse>> {
         const queryParameters: any = {};
 
@@ -218,40 +211,6 @@ export class VideosApi extends runtime.BaseAPI {
     async apiVideosGetNameGet(requestParameters: ApiVideosGetNameGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<VideoNameResponse> {
         const response = await this.apiVideosGetNameGetRaw(requestParameters, initOverrides);
         return await response.value();
-    }
-
-    /**
-     */
-    async apiVideosGetThumbnailGetRaw(requestParameters: ApiVideosGetThumbnailGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        if (requestParameters['thumbnailName'] == null) {
-            throw new runtime.RequiredError(
-                'thumbnailName',
-                'Required parameter "thumbnailName" was null or undefined when calling apiVideosGetThumbnailGet().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        if (requestParameters['thumbnailName'] != null) {
-            queryParameters['thumbnailName'] = requestParameters['thumbnailName'];
-        }
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        const response = await this.request({
-            path: `/api/Videos/GetThumbnail`,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
-
-        return new runtime.VoidApiResponse(response);
-    }
-
-    /**
-     */
-    async apiVideosGetThumbnailGet(requestParameters: ApiVideosGetThumbnailGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
-        await this.apiVideosGetThumbnailGetRaw(requestParameters, initOverrides);
     }
 
     /**
@@ -311,40 +270,6 @@ export class VideosApi extends runtime.BaseAPI {
     async apiVideosGetVideoDownloadInfoGet(requestParameters: ApiVideosGetVideoDownloadInfoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<VideoDownloadInfo> {
         const response = await this.apiVideosGetVideoDownloadInfoGetRaw(requestParameters, initOverrides);
         return await response.value();
-    }
-
-    /**
-     */
-    async apiVideosGetVideoGetRaw(requestParameters: ApiVideosGetVideoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<void>> {
-        if (requestParameters['videoName'] == null) {
-            throw new runtime.RequiredError(
-                'videoName',
-                'Required parameter "videoName" was null or undefined when calling apiVideosGetVideoGet().'
-            );
-        }
-
-        const queryParameters: any = {};
-
-        if (requestParameters['videoName'] != null) {
-            queryParameters['videoName'] = requestParameters['videoName'];
-        }
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        const response = await this.request({
-            path: `/api/Videos/GetVideo`,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
-
-        return new runtime.VoidApiResponse(response);
-    }
-
-    /**
-     */
-    async apiVideosGetVideoGet(requestParameters: ApiVideosGetVideoGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<void> {
-        await this.apiVideosGetVideoGetRaw(requestParameters, initOverrides);
     }
 
     /**

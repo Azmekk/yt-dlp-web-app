@@ -88,7 +88,7 @@ namespace YT_DLP_Web_App_Backend.Services
                     throw new Exception($"Invalid url {url}");
                 }
 
-                VideosInProgressStorage.AddVideoToTrack(videoRecord.Id);
+                MediaInProgressStorage.AddVideoToTrack(videoRecord.Id);
 
                 YoutubeDL ytdl = new()
                 {
@@ -109,7 +109,7 @@ namespace YT_DLP_Web_App_Backend.Services
 
                 Progress<DownloadProgress> progress = new(x =>
                 {
-                    VideosInProgressStorage.UpdateVideoPercent(videoRecord.Id, 100 * x.Progress);
+                    MediaInProgressStorage.UpdateVideoPercent(videoRecord.Id, 100 * x.Progress);
                 });
 
                 OptionSet options = new()
@@ -138,7 +138,7 @@ namespace YT_DLP_Web_App_Backend.Services
                 videoRecord.UpdatedAt = DateTime.UtcNow;
 
                 await videoDbContext.SaveChangesAsync();
-                VideosInProgressStorage.MarkVideoDownloaded(videoRecord.Id);
+                MediaInProgressStorage.MarkVideoDownloaded(videoRecord.Id);
             }
             catch (Exception ex)
             {

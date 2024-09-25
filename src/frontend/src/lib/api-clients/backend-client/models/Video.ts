@@ -13,6 +13,13 @@
  */
 
 import { mapValues } from '../runtime';
+import type { Mp3Status } from './Mp3Status';
+import {
+    Mp3StatusFromJSON,
+    Mp3StatusFromJSONTyped,
+    Mp3StatusToJSON,
+} from './Mp3Status';
+
 /**
  * 
  * @export
@@ -79,7 +86,15 @@ export interface Video {
      * @memberof Video
      */
     downloaded?: boolean;
+    /**
+     * 
+     * @type {Mp3Status}
+     * @memberof Video
+     */
+    mp3Status?: Mp3Status;
 }
+
+
 
 /**
  * Check if a given object implements the Video interface.
@@ -108,6 +123,7 @@ export function VideoFromJSONTyped(json: any, ignoreDiscriminator: boolean): Vid
         'size': json['size'] == null ? undefined : json['size'],
         'url': json['url'] == null ? undefined : json['url'],
         'downloaded': json['downloaded'] == null ? undefined : json['downloaded'],
+        'mp3Status': json['mp3Status'] == null ? undefined : Mp3StatusFromJSON(json['mp3Status']),
     };
 }
 
@@ -127,6 +143,7 @@ export function VideoToJSON(value?: Video | null): any {
         'size': value['size'],
         'url': value['url'],
         'downloaded': value['downloaded'],
+        'mp3Status': Mp3StatusToJSON(value['mp3Status']),
     };
 }
 

@@ -10,7 +10,7 @@ RUN apk add --no-cache curl
 
 RUN curl -L https://unpkg.com/@pnpm/self-installer | node
 
-RUN pnpm install
+RUN pnpm install/
 RUN pnpm build
 
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS yt-dlp-web-backend-builder
@@ -36,6 +36,7 @@ RUN apt-get install -y curl ffmpeg
 RUN apt-get clean
 
 RUN curl -L -o /usr/bin/yt-dlp https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux
+RUN chmod +x /usr/bin/yt-dlp
 
 EXPOSE 41001
 

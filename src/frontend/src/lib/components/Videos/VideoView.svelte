@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { BASE_PATH, VideosApi, type Video } from '$lib/api-clients/backend-client';
+	import { BASE_PATH, Mp3Status, VideosApi, type Video } from '$lib/api-clients/backend-client';
 	import { formatBytes, formatDate } from '$lib/utils';
 	import {
 		mdiCancel,
@@ -7,7 +7,8 @@
 		mdiDelete,
 		mdiDownload,
 		mdiPencil,
-		mdiTrashCan
+		mdiTrashCan,
+		mdiMusicNotePlus
 	} from '@mdi/js';
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { Button, Dialog, Field, Input, Progress, ProgressCircle } from 'svelte-ux';
@@ -30,7 +31,7 @@
 		deleteButtonLoading = true;
 		let videosApi = new VideosApi();
 		try {
-			await videosApi.apiVideosDeleteVideoDelete({videoId: video.id ?? -1});
+			await videosApi.apiVideosDeleteVideoDelete({ videoId: video.id ?? -1 });
 			dispatch('videoDeleted');
 		} catch (error) {
 			alert('Failed to delete video.');
@@ -52,10 +53,12 @@
 		editButtonLoading = true;
 		let videosApi = new VideosApi();
 		try {
-			await videosApi.apiVideosUpdateVideoNamePatch({updateVideoNameRequest: {videoId: video.id, newName}});
-            video.fileName = newName;
+			await videosApi.apiVideosUpdateVideoNamePatch({
+				updateVideoNameRequest: { videoId: video.id, newName }
+			});
+			video.fileName = newName;
 			dispatch('videoModified');
-            clearNameEditInputs();
+			clearNameEditInputs();
 		} catch (error) {
 			alert('Failed to rename video');
 			console.log('Failed to rename video: ', error);
@@ -64,57 +67,54 @@
 		}
 	}
 
-    function clearNameEditInputs(){
-        editingName = false;
-        newName = video.fileName ?? "";
-        editButtonLoading = false;
-    }
+	function clearNameEditInputs() {
+		editingName = false;
+		newName = video.fileName ?? '';
+		editButtonLoading = false;
+	}
 
 	onMount(async () => {
 		if (video.thumbnailName !== '') {
-			thumbnailUrl = BASE_PATH + "/api/videos/GetThumbnail?thumbnailName=" + video.thumbnailName
+			thumbnailUrl = BASE_PATH + '/Downloads/' + video.thumbnailName;
 		}
-		videoUrl = BASE_PATH + "/api/videos/Getvideo?videoName=" + video.fileName
-		mp3Url = BASE_PATH + "/api/videos/GetMp3?videoId=" + video.id
-
+		videoUrl = BASE_PATH + '/Downloads/' + video.fileName;
+		mp3Url =
+			video.mp3FileName === ''
+				? BASE_PATH + '/api/videos/GetMp3?videoId=' + video.id
+				: BASE_PATH + '/Downloads/' + video.mp3FileName;
 
 		videoWidth = 480 > innerWidth ? innerWidth : 480;
 		videoHeight = videoWidth * (9 / 16);
 
-		newName = video.fileName ?? "";
+		newName = video.fileName ?? '';
 	});
 
-	async function downloadResource(resourceUrl: string, name = "") {
-    try {
-        const response = await fetch(resourceUrl);
-        const blob = await response.blob();
+	async function downloadResource(url: string, name = '') {
+		try {
+			const response = await fetch(url);
+			const blob = await response.blob();
 
-        const link = document.createElement("a");
-        link.download = name;
-        link.href = URL.createObjectURL(blob);
-        
-        link.click();
+			const link = document.createElement('a');
+			link.download = name;
+			link.href = URL.createObjectURL(blob);
 
-        URL.revokeObjectURL(link.href);
-    } catch (error) {
-		alert("Error downloading resource");
-        console.error("Error downloading resource:", error);
-    }
-}
+			link.click();
 
-	let downloadMp3Loading = false;
-	let downloadVideoLoading = false;
-
-	async function downloadMp3(url: string, name = ""){
-		downloadMp3Loading = true;
-		await downloadResource(url, name)
-		downloadMp3Loading = false;
+			URL.revokeObjectURL(link.href);
+		} catch (error) {
+			alert('Error downloading resource');
+			console.error('Error downloading resource:', error);
+		}
 	}
 
-	async function downloadvideo(url: string, name = ""){
-		downloadVideoLoading = true;
-		await downloadResource(url, name)
-		downloadVideoLoading = false;
+	let generateMp3Loading = false;
+	let downloadVideoLoading = false;
+	let downloadMp3Loading = false;
+
+	async function generateMp3(videoId: number) {
+		let videosApi = new VideosApi();
+		generateMp3Loading = true;
+		await videosApi.apiVideosGenerateMp3Get({ videoId });
 	}
 
 	let dialogDeleteOpen = false;
@@ -193,30 +193,54 @@
 				{/if}
 			</div>
 
-			<p class="text-sm">Downloaded: {formatDate(video.createdAt?.toString() ?? "")}</p>
+			<p class="text-sm">Downloaded: {formatDate(video.createdAt?.toString() ?? '')}</p>
 			<p class="text-sm">
 				Size: {video.downloaded ? formatBytes(video.size ?? 0) : 'Awaiting completion'}
 			</p>
 		</div>
 		<div class="flex mt-4 gap-1 justify-center md:justify-normal">
+			{#if video.mp3Status == Mp3Status.NONE}
 				<Button
 					disabled={!video.downloaded}
 					variant={'fill'}
 					color="accent"
-					icon={mdiDownload}
+					icon={mdiMusicNotePlus}
 					class="text-slate-100"
-					loading={downloadMp3Loading}
-					on:click={async () => await downloadMp3(mp3Url, video.fileName?.replace(".mp4", ".mp3"))}>Mp3</Button
+					loading={generateMp3Loading}
+					on:click={async () => await generateMp3(video.id ?? -1)}>Generate</Button
 				>
+			{:else}
 				<Button
-					disabled={!video.downloaded}
+					disabled={!video.downloaded || video.mp3Status == Mp3Status.INPROGRESS}
+					loading={video.mp3Status == Mp3Status.INPROGRESS || downloadMp3Loading}
 					variant={'fill'}
-					color="success"
+					color="accent"
 					icon={mdiDownload}
 					class="text-slate-100"
-					loading={downloadVideoLoading}
-					on:click={async () => await downloadvideo(videoUrl, video.fileName ?? "")}>Download</Button
+					on:click={async () => {
+						downloadVideoLoading = true;
+						await downloadResource(
+							BASE_PATH + `/Downloads/${video.mp3FileName}`,
+							video.mp3FileName ?? ''
+						);
+						downloadVideoLoading = false;
+					}}>Mp3</Button
 				>
+			{/if}
+			<Button
+				disabled={!video.downloaded}
+				variant={'fill'}
+				color="success"
+				icon={mdiDownload}
+				class="text-slate-100"
+				loading={downloadVideoLoading}
+				on:click={async () => {
+					downloadVideoLoading = true;
+					await downloadResource(BASE_PATH + `/Downloads/${video.fileName}`, video.fileName ?? '');
+					downloadVideoLoading = false;
+				}}
+				>Download
+			</Button>
 			<Button
 				disabled={!video.downloaded}
 				variant={'fill'}

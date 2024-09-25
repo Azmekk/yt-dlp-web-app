@@ -16,6 +16,15 @@ namespace YT_DLP_Web_App_Backend.Database.Entities
         public long Size { get; set; }
         public string Url { get; set; }
         public bool Downloaded { get; set; }
+        
+        public Mp3Status Mp3Status { get; set; }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
+    }
+
+    public enum Mp3Status
+    {
+        None = 0,
+        InProgress,
+        Completed
     }
 }

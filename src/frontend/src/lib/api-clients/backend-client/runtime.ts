@@ -13,7 +13,8 @@
  */
 
 
-export const BASE_PATH = "" 
+export const BASE_PATH = process.env.NODE_ENV === "development" ? "http://localhost:41001".replace(/\/+$/, "") : "";
+
 
 export interface ConfigurationParameters {
     basePath?: string; // override base path

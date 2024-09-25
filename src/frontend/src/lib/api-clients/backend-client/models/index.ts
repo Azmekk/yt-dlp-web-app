@@ -1,5 +1,6 @@
 /* tslint:disable */
 /* eslint-disable */
+export * from './Mp3Status';
 export * from './OrderVideosBy';
 export * from './SaveVideoRequest';
 export * from './UpdateVideoNameRequest';

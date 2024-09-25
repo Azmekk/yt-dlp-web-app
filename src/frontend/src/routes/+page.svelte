@@ -75,8 +75,11 @@
 
 			videosResult.forEach(async (x) => {
 				if (!x.downloaded && x.id) {
-					var downloadInfo = await videosApi.apiVideosGetVideoDownloadInfoGet({videoId: x.id})
-					videosInProgress = [...videosInProgress, { videoId: x.id, downloadPercent: downloadInfo.downloadPercent ?? 0 }];
+					var downloadInfo = await videosApi.apiVideosGetVideoDownloadInfoGet({ videoId: x.id });
+					videosInProgress = [
+						...videosInProgress,
+						{ videoId: x.id, downloadPercent: downloadInfo.downloadPercent ?? 0 }
+					];
 				}
 			});
 		} catch (error) {
@@ -148,18 +151,23 @@
 	let webSocketService: WebSocketService;
 
 	async function handleIncomingSocketMessage(message: string): Promise<void> {
-		let videoDownloadInfo: VideoDownloadInfo = JSON.parse(message);
+		let mediaDownloadInfo: any = JSON.parse(message);
 
-		if (videoDownloadInfo.downloaded) {
-			await updateVideoInfoAsync();
-			return;
-		}
-
-		videosInProgress.forEach(x => {
-			if (x.videoId == videoDownloadInfo.videoId) {
-				x.downloadPercent = videoDownloadInfo.downloadPercent
+		if ('downloadPercent' in mediaDownloadInfo) {
+			if (mediaDownloadInfo.downloaded) {
+				await updateVideoInfoAsync();
+				return;
 			}
-		})
+
+			videosInProgress.forEach((x) => {
+				if (x.videoId == mediaDownloadInfo.videoId) {
+					x.downloadPercent = mediaDownloadInfo.downloadPercent;
+				}
+			});
+		}
+		else if ('converted' in mediaDownloadInfo) {
+			await updateVideoInfoAsync();
+		}
 
 		videosInProgress = [...videosInProgress];
 	}
@@ -168,13 +176,19 @@
 		webSocketService.sendMessage('renew');
 	}
 
+	function getWsPath(): string {
+		if (BASE_PATH == '') {
+			return `${window.location.protocol == 'https:' ? 'wss' : 'ws'}://${window.location.hostname + ':' + window.location.port + '/ws'}`;
+		} else {
+			let baseUrl = new URL(BASE_PATH);
+			return `${baseUrl.protocol == 'https:' ? 'wss' : 'ws'}://${baseUrl.hostname + ':' + baseUrl.port + '/ws'}`;
+		}
+	}
+
 	onMount(async () => {
 		await updateVideoInfoAsync();
 
-		webSocketService = new WebSocketService(
-			`${window.location.protocol == "https:" ? "wss" : "ws"}://${window.location.hostname + ':' + window.location.port + '/ws'}`,
-			handleIncomingSocketMessage
-		);
+		webSocketService = new WebSocketService(getWsPath(), handleIncomingSocketMessage);
 		webSocketService.connect();
 		location;
 
@@ -214,7 +228,8 @@
 						<VideoView
 							on:videoDeleted={async () => await updateVideoInfoAsync()}
 							bind:video
-							downloadPercent={videosInProgress.find((x) => x.videoId === video.id)?.downloadPercent ?? 1}
+							downloadPercent={videosInProgress.find((x) => x.videoId === video.id)
+								?.downloadPercent ?? 1}
 						/>
 					{/each}
 				</div>

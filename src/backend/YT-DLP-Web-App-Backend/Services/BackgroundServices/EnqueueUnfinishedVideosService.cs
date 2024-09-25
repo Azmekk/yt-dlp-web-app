@@ -13,12 +13,22 @@ public class EnqueueUnfinishedVideosService(IServiceScopeFactory serviceScopeFac
         VideoDbContext dbContext = scope.ServiceProvider.GetRequiredService<VideoDbContext>();
         YtDlpService ytDlpService = scope.ServiceProvider.GetRequiredService<YtDlpService>();
 
-        List<Video> videos = await dbContext.Videos.Where(x => x.Downloaded == false).ToListAsync();
+        List<Video> videos = await dbContext.Videos.Where(x => x.Downloaded == false).ToListAsync(stoppingToken);
 
         foreach (var video in videos)
         {
             BackgroundJob.Enqueue(() => ytDlpService.DownloadSavedVideo(video.Id));
         }
+        
+        List<Video> stuckMp3Downloads = await dbContext.Videos
+            .Where(x => x.Mp3Status == Mp3Status.InProgress)
+            .ToListAsync(stoppingToken);
+
+        foreach (var stuckMp3Download in stuckMp3Downloads)
+        {
+            stuckMp3Download.Mp3Status = Mp3Status.None;
+        }
+        await dbContext.SaveChangesAsync(stoppingToken);
         
     }
 }
