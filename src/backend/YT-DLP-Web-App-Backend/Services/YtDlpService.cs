@@ -119,6 +119,7 @@ namespace YT_DLP_Web_App_Backend.Services
                     Output = Path.Join(AppConstants.DefaultDownloadDir, videoName + ".%(ext)s"),
                     WriteThumbnail = true,
                     Format = requestedFormat,
+                    ConvertThumbnails = "jpg"
                 };
                 
                 options.AddCustomOption("-S", "vcodec:h264,res,acodec:aac");
