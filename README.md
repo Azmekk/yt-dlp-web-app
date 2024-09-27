@@ -50,8 +50,6 @@ It features both light and dark themes and is designed with a mobile-friendly la
 3. App should now run as a standalone desktop app.
 4. Your downloads will be located in `_root_/app/Downloads` so you don't have to download them twice.
 
-By default, the app will create necessary files in the same directory as the executable. To customize their locations, edit the .env file in the executable's directory. Here’s a breakdown:
-
 ## Docker Deployment
 
 You can deploy the app using Docker by either pulling the image and running it with `docker run` or by using `docker-compose`. Here’s how to do both:
