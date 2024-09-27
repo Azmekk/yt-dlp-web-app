@@ -11,7 +11,7 @@ RUN apk add --no-cache curl
 RUN curl -L https://unpkg.com/@pnpm/self-installer | node
 
 RUN pnpm install
-RUN pnpm build
+RUN pnpm run build:noport
 
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS yt-dlp-web-backend-builder
 

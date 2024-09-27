@@ -1,0 +1,68 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/schema.json",
+  "build": {
+    "beforeBuildCommand": "pnpm run build",
+    "beforeDevCommand": "pnpm run dev",
+    "devPath": "http://localhost:5173",
+    "distDir": "../build"
+  },
+  "package": {
+    "productName": "yt-dlp-desktop",
+    "version": "2.0.0"
+  },
+  "tauri": {
+    "allowlist": {
+      "all": false
+    },
+    "bundle": {
+      "active": true,
+      "category": "DeveloperTool",
+      "copyright": "",
+      "deb": {
+        "depends": []
+      },
+      "externalBin": [],
+      "icon": [
+        "icons/icons8-play-button-color-32.ico",
+        "icons/icons8-play-button-color-72.ico",
+        "icons/icons8-play-button-color-96.ico",
+        "icons/icons8-play-button-color-32.png",
+        "icons/icons8-play-button-color-72.png",
+        "icons/icons8-play-button-color-96.png"
+
+      ],
+      "identifier": "yt-dlp-desktop",
+      "longDescription": "",
+      "macOS": {
+        "entitlements": null,
+        "exceptionDomain": "",
+        "frameworks": [],
+        "providerShortName": null,
+        "signingIdentity": null
+      },
+      "resources": {"..\\..\\backend\\YT-DLP-Web-App-Backend\\bin\\tauri-release\\win-x64": "\\app"},
+      "shortDescription": "",
+      "targets": "all",
+      "windows": {
+        "certificateThumbprint": null,
+        "digestAlgorithm": "sha256",
+        "timestampUrl": ""
+      }
+    },
+    "security": {
+      "csp": null
+    },
+    "updater": {
+      "active": false
+    },
+    "windows": [
+      {
+        "fullscreen": false,
+        "height": 600,
+        "resizable": true,
+        "title": "YT-DLP Desktop",
+        "width": 800
+      }
+    ]
+  }
+}
