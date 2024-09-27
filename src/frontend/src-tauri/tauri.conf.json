@@ -8,7 +8,7 @@
   },
   "package": {
     "productName": "yt-dlp-desktop",
-    "version": "2.0.0"
+    "version": "2.0.1"
   },
   "tauri": {
     "allowlist": {
@@ -61,7 +61,7 @@
         "height": 600,
         "resizable": true,
         "title": "YT-DLP Desktop",
-        "width": 800
+        "width": 1400
       }
     ]
   }
