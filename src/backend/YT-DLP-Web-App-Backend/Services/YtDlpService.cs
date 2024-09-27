@@ -192,7 +192,7 @@ namespace YT_DLP_Web_App_Backend.Services
                 Output = Path.Join(AppConstants.DefaultDownloadDir, videoNameWithoutExt + ".%(ext)s"),
                 WriteThumbnail = true,
                 SkipDownload = true,
-                ConvertThumbnails = ".jpg",
+                ConvertThumbnails = "jpg",
                 Verbose = true,
             };
 
