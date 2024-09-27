@@ -42,11 +42,13 @@ It features both light and dark themes and is designed with a mobile-friendly la
 
 # Installation
 
-## Running locally
-If don't want to use docker, you can do the following: 
-1. Download the application **for your platform** as a zip file from the [latest release](https://github.com/Azmekk/yt-dlp-web-app/releases/latest) 
-2. Extract the zip using something like [7zip](https://www.7-zip.org/).
-4. Run the file called `YT-DLP-Web-App-Backend.exe` and access the UI at http://localhost:41001
+## Running as a standalone desktop app
+(Currently only windows is supported)
+
+1. Download the setup from [latest releases](https://github.com/Azmekk/yt-dlp-web-app/releases/latest).
+2. Install the app in your directory of choice and run the executable.
+3. App should now run as a standalone desktop app.
+4. Your downloads will be located in `_root_/app/Downloads` so you don't have to download them twice.
 
 By default, the app will create necessary files in the same directory as the executable. To customize their locations, edit the .env file in the executable's directory. Here’s a breakdown:
 
