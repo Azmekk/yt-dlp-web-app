@@ -59,6 +59,10 @@ export interface ApiVideosGetNameGetRequest {
     videoUrl?: string;
 }
 
+export interface ApiVideosGetVideoCountGetRequest {
+    search?: string;
+}
+
 export interface ApiVideosGetVideoDownloadInfoGetRequest {
     videoId: number;
 }
@@ -215,8 +219,12 @@ export class VideosApi extends runtime.BaseAPI {
 
     /**
      */
-    async apiVideosGetVideoCountGetRaw(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<VideoCountResponse>> {
+    async apiVideosGetVideoCountGetRaw(requestParameters: ApiVideosGetVideoCountGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<VideoCountResponse>> {
         const queryParameters: any = {};
+
+        if (requestParameters['search'] != null) {
+            queryParameters['search'] = requestParameters['search'];
+        }
 
         const headerParameters: runtime.HTTPHeaders = {};
 
@@ -232,8 +240,8 @@ export class VideosApi extends runtime.BaseAPI {
 
     /**
      */
-    async apiVideosGetVideoCountGet(initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<VideoCountResponse> {
-        const response = await this.apiVideosGetVideoCountGetRaw(initOverrides);
+    async apiVideosGetVideoCountGet(requestParameters: ApiVideosGetVideoCountGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<VideoCountResponse> {
+        const response = await this.apiVideosGetVideoCountGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 

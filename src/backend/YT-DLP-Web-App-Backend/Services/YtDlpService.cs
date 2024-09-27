@@ -119,7 +119,7 @@ namespace YT_DLP_Web_App_Backend.Services
                     Output = Path.Join(AppConstants.DefaultDownloadDir, videoName + ".%(ext)s"),
                     WriteThumbnail = true,
                     Format = requestedFormat,
-                    ConvertThumbnails = "jpg"
+                    ConvertThumbnails = "png"
                 };
                 
                 options.AddCustomOption("-S", "vcodec:h264,res,acodec:aac");
@@ -135,7 +135,7 @@ namespace YT_DLP_Web_App_Backend.Services
 
                 string finalFilePath = Path.Join(AppConstants.DefaultDownloadDir, videoRecord.FileName);
                 videoRecord.Downloaded = true;
-                videoRecord.ThumbnailName = videoName + ".jpg";
+                videoRecord.ThumbnailName = videoName + ".png";
                 videoRecord.Size = new FileInfo(finalFilePath).Length;
                 videoRecord.UpdatedAt = DateTime.UtcNow;
 
@@ -145,7 +145,7 @@ namespace YT_DLP_Web_App_Backend.Services
             catch (Exception ex)
             {
                 string finalFilePath = Path.Join(AppConstants.DefaultDownloadDir, videoRecord.FileName);
-                string finalThumbnailPath = Path.Join(AppConstants.DefaultDownloadDir, videoName + ".jpg");
+                string finalThumbnailPath = Path.Join(AppConstants.DefaultDownloadDir, videoName + ".png");
 
                 if (File.Exists(finalFilePath))
                 {

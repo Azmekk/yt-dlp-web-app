@@ -36,7 +36,7 @@ namespace YT_DLP_Web_App_Backend.Services
 
             if(!string.IsNullOrEmpty(search))
             {
-                queryable = queryable.Where(x => x.FileName.Contains(search));
+                queryable = queryable.Where(x => x.FileName.ToLower().Contains(search.ToLower()));
             }
 
             switch(orderBy)
@@ -84,9 +84,15 @@ namespace YT_DLP_Web_App_Backend.Services
             return result;
         }
 
-        public async Task<int> GetVideoCount()
+        public async Task<int> GetVideoCount(string? search)
         {
-            return await videoDbContext.Videos.CountAsync(x => x.DeletedAt == null);
+            var queryable = videoDbContext.Videos.Where(x => x.DeletedAt == null);
+
+            if (!string.IsNullOrEmpty(search))
+            {
+                queryable = queryable.Where(x => x.FileName.ToLower().Contains(search.ToLower()));
+            }
+            return await queryable.CountAsync();
         }
 
         public async Task<Video?> GetVideoById(int videoId)

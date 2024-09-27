@@ -71,7 +71,7 @@
 				search: videoSearch
 			};
 			videosResult = await videosApi.apiVideosListVideosGet(request);
-			totalVideosAmountResult = await videosApi.apiVideosGetVideoCountGet();
+			totalVideosAmountResult = await videosApi.apiVideosGetVideoCountGet({ search: videoSearch });
 
 			videosResult.forEach(async (x) => {
 				if (!x.downloaded && x.id) {

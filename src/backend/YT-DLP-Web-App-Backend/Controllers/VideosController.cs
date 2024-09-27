@@ -53,9 +53,9 @@ namespace YT_DLP_Web_App_Backend.Controllers
 
         [HttpGet]
         [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(VideoCountResponse))]
-        public async Task<ActionResult<VideoCountResponse>> GetVideoCount()
+        public async Task<ActionResult<VideoCountResponse>> GetVideoCount(string? search)
         {
-            return Ok(new VideoCountResponse { Count = await videosService.GetVideoCount() });
+            return Ok(new VideoCountResponse { Count = await videosService.GetVideoCount(search) });
         }
 
         [HttpGet]
