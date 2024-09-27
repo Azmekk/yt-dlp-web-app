@@ -17,7 +17,7 @@ public class EnqueueUnfinishedVideosService(IServiceScopeFactory serviceScopeFac
 
         foreach (var video in videos)
         {
-            BackgroundJob.Enqueue(() => ytDlpService.DownloadSavedVideo(video.Id));
+            BackgroundJob.Enqueue(() => ytDlpService.DownloadSavedVideoAsync(video.Id));
         }
         
         List<Video> stuckMp3Downloads = await dbContext.Videos
