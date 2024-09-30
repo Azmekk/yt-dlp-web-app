@@ -48,3 +48,23 @@ export function getResolutionDimensions(value: number): { width: number; height:
 
     return resolutions[value] || null;
 }
+
+export function secondsToTimeString(seconds: number): string {
+    const hours = Math.floor(seconds / 3600).toString().padStart(2, '0');
+    const minutes = Math.floor((seconds % 3600) / 60).toString().padStart(2, '0');
+    const secs = Math.floor(seconds % 60).toString().padStart(2, '0');
+    const milliseconds = Number(((seconds % 1) * 1000).toFixed(3).padStart(3, '0'));
+
+    return milliseconds > 0 ? `${hours}:${minutes}:${secs}.${milliseconds}` : `${hours}:${minutes}:${secs}`;
+}
+
+export function timeStringToSeconds(timeString: string): number {
+    const timeParts = timeString.split(':');
+    const hours = parseInt(timeParts[0], 10);
+    const minutes = parseInt(timeParts[1], 10);
+    const secondsParts = timeParts[2].split('.');
+    const seconds = parseInt(secondsParts[0], 10);
+    const milliseconds = secondsParts[1] ? parseFloat(`0.${secondsParts[1]}`) : 0;
+
+    return hours * 3600 + minutes * 60 + seconds + milliseconds;
+}

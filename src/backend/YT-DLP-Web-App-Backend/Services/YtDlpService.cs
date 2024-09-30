@@ -79,7 +79,7 @@ namespace YT_DLP_Web_App_Backend.Services
 
         [AutomaticRetry(Attempts = 0, OnAttemptsExceeded = AttemptsExceededAction.Fail)]
         public async Task DownloadVideoAsync(string url, string videoNameWithoutExt, int videoId, VideoDimensions? dimensions,
-            CancellationToken cancellationToken = default)
+            VideoDuration? videoDuration, CancellationToken cancellationToken = default)
         {
             Video videoRecord = await videoDbContext.Videos.FirstOrDefaultAsync(x => x.Id == videoId) ??
                                 throw new Exception(
@@ -121,8 +121,13 @@ namespace YT_DLP_Web_App_Backend.Services
                     Output = Path.Join(AppConstants.DefaultDownloadDir, videoNameWithoutExt + ".%(ext)s"),
                     WriteThumbnail = true,
                     Format = requestedFormat,
-                    Verbose = true
+                    Verbose = true,
                 };
+
+                if (videoDuration != null && !string.IsNullOrEmpty(videoDuration.EndTime) && !string.IsNullOrEmpty(videoDuration.StartTime))
+                {
+                    options.DownloadSections = $"*{videoDuration.StartTime}-{videoDuration.EndTime}";
+                }
 
                 options.AddCustomOption("-S", "vcodec:h264,res,acodec:aac");
 
@@ -247,7 +252,7 @@ namespace YT_DLP_Web_App_Backend.Services
             }
 
             await DownloadVideoAsync(video.Url, video.FileName.TrimEnd(Path.GetExtension(video.FileName)), video.Id,
-                null);
+                null, null);
         }
     }
 }

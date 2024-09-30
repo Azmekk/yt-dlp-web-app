@@ -1,11 +1,16 @@
 <script lang="ts">
 	import { VideosApi } from '$lib/api-clients/backend-client';
-	import type { VideoDimensions } from '$lib/api-clients/backend-client/models';
+	import type { SaveVideoRequest, VideoDimensions, VideoDuration } from '$lib/api-clients/backend-client/models';
 
-	import { getFormattedVideoName, getResolutionDimensions } from '$lib/utils';
+	import {
+		getFormattedVideoName,
+		getResolutionDimensions,
+		secondsToTimeString,
+		timeStringToSeconds
+	} from '$lib/utils';
 	import { mdiCancel, mdiDownload, mdiPlus, mdiAutorenew } from '@mdi/js';
 	import { createEventDispatcher } from 'svelte';
-	import { Button, Dialog, Field, Input, SelectField, Switch, type MenuOption } from 'svelte-ux';
+	import { Button, Dialog, Field, Input, SelectField, Switch, RangeSlider, type MenuOption } from 'svelte-ux';
 
 	const dispatch = createEventDispatcher();
 
@@ -58,12 +63,20 @@
 	];
 	let selectedDimension = 1080;
 	let dimensionsToggle = false;
+	let cutVideoToggle = false;
 	let maxDimension = 2160;
+
+	let videoDurationInSeconds = 0;
 
 	let dialogLoading = false;
 	//let selectedFormat: string = 'mp4';
 	let videoUrl: string = '';
 	let fileName: string = '';
+
+	let videoDuration: VideoDuration = {
+		startTime: '00:00:00',
+		endTime: '00:00:00'
+	};
 
 	function clearDialogFieldsAndClose() {
 		selectedDimension = 1080;
@@ -77,24 +90,41 @@
 		fileName = '';
 		downloadVideoDialogOpen = false;
 		saveVideoButtonLoading = false;
+		cutVideoToggle = false;
+		maxDimension = 2160;
+
+		videoDurationInSeconds = 0;
 	}
 
-	async function fetchNameAsync() {
+	let lastFetchedUrl = '';
+	async function fetchVideoData() {
 		if (videoUrl == '') {
 			console.error("Can't get video name, video url is empty.");
+			return;
+		}
+
+		if (videoUrl == lastFetchedUrl) {
 			return;
 		}
 
 		let videoApi = new VideosApi();
 
 		try {
-			var nameResponse = await videoApi.apiVideosGetNameGet({ videoUrl: videoUrl });
+			var videoDataResponse = await videoApi.apiVideosGetVideoDataGet({ videoUrl: videoUrl });
 			fileName =
-				nameResponse == null || nameResponse.name == null || nameResponse.name == ''
+				videoDataResponse == null ||
+				videoDataResponse.title == null ||
+				videoDataResponse.title == ''
 					? getFormattedVideoName()
-					: nameResponse?.name.substring(0, 80);
+					: videoDataResponse?.title.substring(0, 80);
+
+			videoDurationInSeconds = videoDataResponse?.duration ?? 0;
+			videoDuration.startTime = '00:00:00';
+			videoDuration.endTime = secondsToTimeString(videoDataResponse?.duration ?? 0);
+
+			lastFetchedUrl = videoUrl;
 		} catch (error) {
-			alert('Failed to fetch video name.');
+			alert('Failed to fetch video data.');
 			console.error(error);
 		}
 	}
@@ -120,6 +150,9 @@
 		if (dimensionsToggle) {
 			await fetchDimensionsAsync();
 		}
+		if (cutVideoToggle) {
+			await fetchVideoData();
+		}
 		dialogLoading = false;
 	}
 
@@ -128,20 +161,20 @@
 		saveVideoButtonLoading = true;
 		let videoApi = new VideosApi();
 		try {
-			if (dimensionsToggle) {
-				//videoUrl, fileName, selectedFormat, selectedDimension
-				await videoApi.apiVideosSaveVideoPost({
-					saveVideoRequest: {
-						videoUrl,
-						videoName: fileName,
-						videoDimensions: getResolutionDimensions(selectedDimension) ?? undefined
-					}
-				});
-			} else {
-				await videoApi.apiVideosSaveVideoPost({
-					saveVideoRequest: { videoUrl, videoName: fileName }
-				});
+			let saveVideoRequest: SaveVideoRequest = {
+				videoUrl: videoUrl,
+				videoName: fileName
 			}
+
+			if (dimensionsToggle) {
+				saveVideoRequest.videoDimensions = getResolutionDimensions(selectedDimension) ?? undefined;
+			}
+
+			if (cutVideoToggle) {
+				saveVideoRequest.videoDuration = videoDuration;
+			}
+
+			videoApi.apiVideosSaveVideoPost({saveVideoRequest});
 		} catch (error) {
 			alert('Video save failed.');
 			dispatch('videoSaveFail', { error: error });
@@ -149,6 +182,22 @@
 		} finally {
 			dispatch('videoSaved');
 			clearDialogFieldsAndClose();
+		}
+	}
+
+	function validateTimeInput(event: any) {
+		const input = event.target;
+		const value = input?.value;
+
+		const validCharacters = /^[0-9:.]*$/;
+		if (!validCharacters.test(value)) {
+			input.value = value.slice(0, -1);
+			return;
+		}
+
+		const timeFormat = /^(\d{2}:\d{2}:\d{2}|\d{2}:\d{2}:\d{2}\.\d{3})$/;
+		if (!timeFormat.test(value) && value.length > 0) {
+			alert('Invalid format. Use 00:00:00 or 00:00:00.000');
 		}
 	}
 
@@ -201,13 +250,13 @@
 					loading={generateNameButtonLoading}
 					on:click={async () => {
 						generateNameButtonLoading = true;
-						await fetchNameAsync();
+						await fetchVideoData();
 						generateNameButtonLoading = false;
 					}}>Generate Name</Button
 				>
 			</div>
 
-			<div class="w-full mb-5">
+			<div class="w-full mb-2">
 				<div class="mb-1">
 					<div class="pl-0.5 text-sm">Select dimensions</div>
 					<Switch
@@ -229,6 +278,57 @@
 							label="Media dimensions"
 							labelPlacement="top"
 						></SelectField>
+					</div>
+				{/if}
+			</div>
+
+			<div class="w-full mb-2">
+				<div class="mb-1">
+					<div class="pl-0.5 text-sm">Cut video</div>
+					<Switch
+						on:change={async () => {
+							dialogLoading = true;
+							await fetchVideoData();
+							dialogLoading = false;
+						}}
+						bind:checked={cutVideoToggle}
+					/>
+				</div>
+				{#if cutVideoToggle}
+					<div class="flex w-full mb-1">
+						<Field class="w-1/2 pl-2" label="Start time" labelPlacement="top">
+							<input
+								class="h-full bg-transparent focus:outline-none focus:ring-0"
+								type="text"
+								bind:value={videoDuration.startTime}
+								on:change={(e) => {
+									validateTimeInput(e);
+									if (timeStringToSeconds(videoDuration.startTime ?? '00:00:00') < 0) {
+										videoDuration.startTime = '00:00:00';
+									}
+								}}
+							/>
+						</Field>
+						<Field class="w-1/2 pl-2" label="End time" labelPlacement="top">
+							<input
+								class="h-full bg-transparent focus:outline-none focus:ring-0"
+								type="text"
+								bind:value={videoDuration.endTime}
+								on:change={(e) => {
+									validateTimeInput(e);
+									const inputDurationInSeconds = timeStringToSeconds(
+										videoDuration.endTime ?? '00:00:00'
+									);
+									if (
+										inputDurationInSeconds > videoDurationInSeconds ||
+										inputDurationInSeconds <
+											timeStringToSeconds(videoDuration.startTime ?? '00:00:00')
+									) {
+										videoDuration.endTime = secondsToTimeString(videoDurationInSeconds);
+									}
+								}}
+							/>
+						</Field>
 					</div>
 				{/if}
 			</div>

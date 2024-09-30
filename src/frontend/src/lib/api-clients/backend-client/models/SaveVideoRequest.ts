@@ -13,6 +13,12 @@
  */
 
 import { mapValues } from '../runtime';
+import type { VideoDuration } from './VideoDuration';
+import {
+    VideoDurationFromJSON,
+    VideoDurationFromJSONTyped,
+    VideoDurationToJSON,
+} from './VideoDuration';
 import type { VideoDimensions } from './VideoDimensions';
 import {
     VideoDimensionsFromJSON,
@@ -44,6 +50,12 @@ export interface SaveVideoRequest {
      * @memberof SaveVideoRequest
      */
     videoDimensions?: VideoDimensions;
+    /**
+     * 
+     * @type {VideoDuration}
+     * @memberof SaveVideoRequest
+     */
+    videoDuration?: VideoDuration;
 }
 
 /**
@@ -68,6 +80,7 @@ export function SaveVideoRequestFromJSONTyped(json: any, ignoreDiscriminator: bo
         'videoUrl': json['videoUrl'],
         'videoName': json['videoName'],
         'videoDimensions': json['videoDimensions'] == null ? undefined : VideoDimensionsFromJSON(json['videoDimensions']),
+        'videoDuration': json['videoDuration'] == null ? undefined : VideoDurationFromJSON(json['videoDuration']),
     };
 }
 
@@ -80,6 +93,7 @@ export function SaveVideoRequestToJSON(value?: SaveVideoRequest | null): any {
         'videoUrl': value['videoUrl'],
         'videoName': value['videoName'],
         'videoDimensions': VideoDimensionsToJSON(value['videoDimensions']),
+        'videoDuration': VideoDurationToJSON(value['videoDuration']),
     };
 }
 

@@ -10,5 +10,6 @@ namespace YT_DLP_Web_App_Backend.DataObjects.Requests
         [Required]
         public string VideoName { get; set; }
         public VideoDimensions? VideoDimensions { get; set; }
+        public VideoDuration? VideoDuration { get; set; }
     }
 }

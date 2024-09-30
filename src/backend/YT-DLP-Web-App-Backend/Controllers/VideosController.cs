@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using System.ComponentModel.DataAnnotations;
 using System.Net;
+using YoutubeDLSharp.Metadata;
 using YT_DLP_Web_App_Backend.Constants;
 using YT_DLP_Web_App_Backend.Database.Entities;
 using YT_DLP_Web_App_Backend.DataObjects;
@@ -39,7 +40,7 @@ namespace YT_DLP_Web_App_Backend.Controllers
             //Create video record so it exists on returned request.
             Video video = await videosService.CreateInitialVideoRecord(request.VideoUrl, request.VideoName + ".mp4");
             
-            BackgroundJob.Enqueue(() => ytDlpService.DownloadVideoAsync(request.VideoUrl, request.VideoName, video.Id, request.VideoDimensions, default));
+            BackgroundJob.Enqueue(() => ytDlpService.DownloadVideoAsync(request.VideoUrl, request.VideoName, video.Id, request.VideoDimensions, request.VideoDuration, default));
 
             return Ok();
         }
@@ -59,18 +60,18 @@ namespace YT_DLP_Web_App_Backend.Controllers
         }
 
         [HttpGet]
-        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(VideoNameResponse))]
+        [SwaggerResponse((int)HttpStatusCode.OK, Type = typeof(VideoData))]
         [SwaggerResponse((int)HttpStatusCode.BadRequest)]
-        public async Task<ActionResult<VideoNameResponse>> GetName(string videoUrl)
+        public async Task<ActionResult<VideoNameResponse>> GetVideoData(string videoUrl)
         {
             if(!Uri.IsWellFormedUriString(videoUrl, UriKind.Absolute))
             {
                 return BadRequest($"Invalid url {videoUrl}");
             }
 
-            YoutubeDLSharp.Metadata.VideoData videoData = await ytDlpService.GetVideoDataAsync(videoUrl);
+            VideoData videoData = await ytDlpService.GetVideoDataAsync(videoUrl);
 
-            return Ok(new VideoNameResponse { Name = videoData.Title });
+            return Ok(videoData);
         }
 
         [HttpGet]

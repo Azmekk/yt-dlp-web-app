@@ -20,9 +20,9 @@ import type {
   UpdateVideoNameRequest,
   Video,
   VideoCountResponse,
+  VideoData,
   VideoDimensions,
   VideoDownloadInfo,
-  VideoNameResponse,
 } from '../models/index';
 import {
     OrderVideosByFromJSON,
@@ -35,12 +35,12 @@ import {
     VideoToJSON,
     VideoCountResponseFromJSON,
     VideoCountResponseToJSON,
+    VideoDataFromJSON,
+    VideoDataToJSON,
     VideoDimensionsFromJSON,
     VideoDimensionsToJSON,
     VideoDownloadInfoFromJSON,
     VideoDownloadInfoToJSON,
-    VideoNameResponseFromJSON,
-    VideoNameResponseToJSON,
 } from '../models/index';
 
 export interface ApiVideosDeleteVideoDeleteRequest {
@@ -55,12 +55,12 @@ export interface ApiVideosGetMaxDimensionsGetRequest {
     videoUrl?: string;
 }
 
-export interface ApiVideosGetNameGetRequest {
-    videoUrl?: string;
-}
-
 export interface ApiVideosGetVideoCountGetRequest {
     search?: string;
+}
+
+export interface ApiVideosGetVideoDataGetRequest {
+    videoUrl?: string;
 }
 
 export interface ApiVideosGetVideoDownloadInfoGetRequest {
@@ -191,34 +191,6 @@ export class VideosApi extends runtime.BaseAPI {
 
     /**
      */
-    async apiVideosGetNameGetRaw(requestParameters: ApiVideosGetNameGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<VideoNameResponse>> {
-        const queryParameters: any = {};
-
-        if (requestParameters['videoUrl'] != null) {
-            queryParameters['videoUrl'] = requestParameters['videoUrl'];
-        }
-
-        const headerParameters: runtime.HTTPHeaders = {};
-
-        const response = await this.request({
-            path: `/api/Videos/GetName`,
-            method: 'GET',
-            headers: headerParameters,
-            query: queryParameters,
-        }, initOverrides);
-
-        return new runtime.JSONApiResponse(response, (jsonValue) => VideoNameResponseFromJSON(jsonValue));
-    }
-
-    /**
-     */
-    async apiVideosGetNameGet(requestParameters: ApiVideosGetNameGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<VideoNameResponse> {
-        const response = await this.apiVideosGetNameGetRaw(requestParameters, initOverrides);
-        return await response.value();
-    }
-
-    /**
-     */
     async apiVideosGetVideoCountGetRaw(requestParameters: ApiVideosGetVideoCountGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<VideoCountResponse>> {
         const queryParameters: any = {};
 
@@ -242,6 +214,34 @@ export class VideosApi extends runtime.BaseAPI {
      */
     async apiVideosGetVideoCountGet(requestParameters: ApiVideosGetVideoCountGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<VideoCountResponse> {
         const response = await this.apiVideosGetVideoCountGetRaw(requestParameters, initOverrides);
+        return await response.value();
+    }
+
+    /**
+     */
+    async apiVideosGetVideoDataGetRaw(requestParameters: ApiVideosGetVideoDataGetRequest, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<runtime.ApiResponse<VideoData>> {
+        const queryParameters: any = {};
+
+        if (requestParameters['videoUrl'] != null) {
+            queryParameters['videoUrl'] = requestParameters['videoUrl'];
+        }
+
+        const headerParameters: runtime.HTTPHeaders = {};
+
+        const response = await this.request({
+            path: `/api/Videos/GetVideoData`,
+            method: 'GET',
+            headers: headerParameters,
+            query: queryParameters,
+        }, initOverrides);
+
+        return new runtime.JSONApiResponse(response, (jsonValue) => VideoDataFromJSON(jsonValue));
+    }
+
+    /**
+     */
+    async apiVideosGetVideoDataGet(requestParameters: ApiVideosGetVideoDataGetRequest = {}, initOverrides?: RequestInit | runtime.InitOverrideFunction): Promise<VideoData> {
+        const response = await this.apiVideosGetVideoDataGetRaw(requestParameters, initOverrides);
         return await response.value();
     }
 
