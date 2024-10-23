@@ -36,6 +36,10 @@ export class WebSocketService {
         }
     }
 
+    public isOpen(): boolean{
+        return (this.socket && this.socket.readyState === WebSocket.OPEN) ?? false;
+    }
+
     close(): void {
         if (this.socket) {
             this.socket.close();

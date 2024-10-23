@@ -49,8 +49,26 @@ namespace YT_DLP_Web_App_Backend.Constants
                 }
             }
         }
-        
-        
+
+        public static void MarkVideoFailed(int videoId)
+        {
+            lock(VideosInProgress)
+            {
+                if(VideosInProgress.TryGetValue(videoId, out VideoDownloadInfo? videoDownloadInfo))
+                {
+                    if(videoDownloadInfo != null)
+                    {
+                        videoDownloadInfo.DownloadPercent = -1;
+                        videoDownloadInfo.Downloaded = false;
+                        _onVideoDownloadUpdated?.Invoke(videoDownloadInfo);
+                    }
+
+                    VideosInProgress.Remove(videoId);
+                }
+            }
+        }
+
+
         public static void MarkMp3Converted(int videoId)
         {
             lock (VideosInProgress)

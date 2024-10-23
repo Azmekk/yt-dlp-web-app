@@ -179,6 +179,8 @@ namespace YT_DLP_Web_App_Backend.Services
                 videoDbContext.Remove(videoRecord);
                 await videoDbContext.SaveChangesAsync();
 
+                MediaInProgressStorage.MarkVideoFailed(videoRecord.Id);
+
                 throw new Exception($"Failed to download video due to ex: {ex}");
             }
         }

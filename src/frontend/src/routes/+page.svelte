@@ -154,6 +154,12 @@
 		let mediaDownloadInfo: any = JSON.parse(message);
 
 		if ('downloadPercent' in mediaDownloadInfo) {
+			if (mediaDownloadInfo.downloadPercent == -1) {
+				await updateVideoInfoAsync();
+				alert("Video download failed.");
+				return;
+			}
+
 			if (mediaDownloadInfo.downloaded) {
 				await updateVideoInfoAsync();
 				return;
@@ -185,14 +191,25 @@
 		}
 	}
 
+	function startWebsocket(){
+		webSocketService = new WebSocketService(getWsPath(), handleIncomingSocketMessage);
+		webSocketService.connect();
+	}
+
+	function restartSocketIfClosed(): void {
+		if (!webSocketService.isOpen()) {
+			startWebsocket();
+		}
+	}
+
+
 	onMount(async () => {
 		await updateVideoInfoAsync();
 
-		webSocketService = new WebSocketService(getWsPath(), handleIncomingSocketMessage);
-		webSocketService.connect();
-		location;
+		startWebsocket();
 
-		interval = setInterval(renewSocket, 10000);
+		setInterval(renewSocket, 1000);
+		setInterval(restartSocketIfClosed, 1000)
 	});
 
 	onDestroy(async () => {});
