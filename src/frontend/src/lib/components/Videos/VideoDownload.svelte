@@ -1,6 +1,10 @@
 <script lang="ts">
 	import { VideosApi } from '$lib/api-clients/backend-client';
-	import type { SaveVideoRequest, VideoDimensions, VideoDuration } from '$lib/api-clients/backend-client/models';
+	import type {
+		SaveVideoRequest,
+		VideoDimensions,
+		VideoDuration
+	} from '$lib/api-clients/backend-client/models';
 
 	import {
 		getFormattedVideoName,
@@ -10,7 +14,16 @@
 	} from '$lib/utils';
 	import { mdiCancel, mdiDownload, mdiPlus, mdiAutorenew } from '@mdi/js';
 	import { createEventDispatcher } from 'svelte';
-	import { Button, Dialog, Field, Input, SelectField, Switch, RangeSlider, type MenuOption } from 'svelte-ux';
+	import {
+		Button,
+		Dialog,
+		Field,
+		Input,
+		SelectField,
+		Switch,
+		RangeSlider,
+		type MenuOption
+	} from 'svelte-ux';
 
 	const dispatch = createEventDispatcher();
 
@@ -164,7 +177,7 @@
 			let saveVideoRequest: SaveVideoRequest = {
 				videoUrl: videoUrl,
 				videoName: fileName
-			}
+			};
 
 			if (dimensionsToggle) {
 				saveVideoRequest.videoDimensions = getResolutionDimensions(selectedDimension) ?? undefined;
@@ -174,14 +187,16 @@
 				saveVideoRequest.videoDuration = videoDuration;
 			}
 
-			videoApi.apiVideosSaveVideoPost({saveVideoRequest});
+			videoApi.apiVideosSaveVideoPost({ saveVideoRequest });
 		} catch (error) {
 			alert('Video save failed.');
 			dispatch('videoSaveFail', { error: error });
 			console.error(error);
 		} finally {
-			dispatch('videoSaved');
-			clearDialogFieldsAndClose();
+			setTimeout(() => {
+				dispatch('videoSaved');
+				clearDialogFieldsAndClose();
+			}, 1000);
 		}
 	}
 
@@ -282,7 +297,7 @@
 				{/if}
 			</div>
 
-			<div class="w-full mb-2">
+			<div hidden={true} class="w-full mb-2">
 				<div class="mb-1">
 					<div class="pl-0.5 text-sm">Cut video</div>
 					<Switch
