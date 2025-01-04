@@ -5,9 +5,9 @@
   <h1 align="center">YT-DLP web app</h1>
 
   <p align="center">
-    <a href="https://github.com/Azmekk/Magic-Number-Analyzer/issues">Report Bug</a>
+    <a href="https://github.com/Azmekk/yt-dlp-web-app/issues">Report Bug</a>
     ·
-    <a href="https://github.com/Azmekk/Magic-Number-Analyzer/issues">Request Feature</a>
+    <a href="https://github.com/Azmekk/yt-dlp-web-app/issues">Request Feature</a>
   </p>
 </div>
 
@@ -102,7 +102,7 @@ If you use docker, the commands have also changed slightly so first review those
 
 ## Bugs, issues, questions and requests
 
-1. If you encounter any bug please check the [issues](https://github.com/Azmekk/Magic-Number-Analyzer/issues) page to see if it has been reported and/or fixed. 
+1. If you encounter any bug please check the [issues](https://github.com/Azmekk/yt-dlp-web-app/issues) page to see if it has been reported and/or fixed. 
 2. If you determine that it hasn't feel free to open one.
 3. If you would like to request a feature, feel free to open an issue, however I cannot promise it will be implemented.
 
