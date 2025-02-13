@@ -167,7 +167,7 @@ namespace YT_DLP_Web_App_Backend.Services
             video.Mp3Status = Mp3Status.InProgress;
             await videoDbContext.SaveChangesAsync();
 
-            string videoNameNoExtension = video.FileName.TrimEnd(Path.GetExtension(video.FileName));
+            string videoNameNoExtension = Path.GetFileNameWithoutExtension(video.FileName);
             string mp3Name = videoNameNoExtension + ".mp3";
 
             string mp3Path = Path.Join(AppConstants.DefaultDownloadDir, mp3Name);
@@ -206,7 +206,7 @@ namespace YT_DLP_Web_App_Backend.Services
                 File.Move(videoPath, newVideoPath);
             }
 
-            string videoNameNoExtension = newName.TrimEnd(Path.GetExtension(newName));
+            string videoNameNoExtension = Path.GetFileNameWithoutExtension(video.FileName);
             string newThumbnailName = videoNameNoExtension + Path.GetExtension(video.ThumbnailName);
 
             var thumbnailPath = Path.Join(AppConstants.DefaultDownloadDir, video.ThumbnailName);

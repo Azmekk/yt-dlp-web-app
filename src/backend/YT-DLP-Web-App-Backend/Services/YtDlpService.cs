@@ -253,7 +253,8 @@ namespace YT_DLP_Web_App_Backend.Services
                 File.Delete(mp3Path);
             }
 
-            await DownloadVideoAsync(video.Url, video.FileName.TrimEnd(Path.GetExtension(video.FileName)), video.Id,
+            var videoNameWithoutExtension = Path.GetFileNameWithoutExtension(video.FileName);
+            await DownloadVideoAsync(video.Url, videoNameWithoutExtension, video.Id,
                 null, null);
         }
     }
