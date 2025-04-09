@@ -91,16 +91,12 @@
 
 	async function downloadResource(url: string, name = '') {
 		try {
-			const response = await fetch(url);
-			const blob = await response.blob();
-
 			const link = document.createElement('a');
+			link.href = url;
 			link.download = name;
-			link.href = URL.createObjectURL(blob);
-
+			document.body.appendChild(link);
 			link.click();
-
-			URL.revokeObjectURL(link.href);
+			document.body.removeChild(link);
 		} catch (error) {
 			alert('Error downloading resource');
 			console.error('Error downloading resource:', error);

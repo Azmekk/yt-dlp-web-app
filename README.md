@@ -5,9 +5,9 @@
   <h1 align="center">YT-DLP web app</h1>
 
   <p align="center">
-    <a href="https://github.com/Azmekk/Magic-Number-Analyzer/issues">Report Bug</a>
+    <a href="https://github.com/Azmekk/yt-dlp-web-app/issues">Report Bug</a>
     ·
-    <a href="https://github.com/Azmekk/Magic-Number-Analyzer/issues">Request Feature</a>
+    <a href="https://github.com/Azmekk/yt-dlp-web-app/issues">Request Feature</a>
   </p>
 </div>
 
@@ -39,16 +39,6 @@ It features both light and dark themes and is designed with a mobile-friendly la
   <img style="width: 19%" src="https://github.com/user-attachments/assets/8d4a277e-440a-49d1-a7c1-95936d82e72c" alt="Site_Mobile_Dark"></img>
   </div>
 </div>
-
-# Installation
-
-## Running as a standalone desktop app
-(Currently only windows is supported)
-
-1. Download the setup from [latest releases](https://github.com/Azmekk/yt-dlp-web-app/releases/latest).
-2. Install the app in your directory of choice and run the executable.
-3. App should now run as a standalone desktop app.
-4. Your downloads will be located in `_root_/app/Downloads` so you don't have to download them twice.
 
 ## Docker Deployment
 
@@ -83,26 +73,9 @@ services:
     restart: unless-stopped
 ```
 
-# Migrating from old go based release
-
-(You only need to do this once and only if you have previously used the golang version of the app.)
-
-If you use docker, the commands have also changed slightly so first review those.
-
-1. **BACKUP YOUR OLD DATABASE**
-2. Run the new version at least once to generate an empty DB file which you can find in the `/Database` directory
-3. Go to the [migrator release page](https://github.com/Azmekk/yt-dlp-web-app/releases/tag/v1.0-DatabaseMigrator) and grab the latest one for your paltform.
-4. Copy the old and new database files somewhere convenient for you, run the migrator and follow the prompts.
-5. The app will make 2 backup copies of both files just in case which you can later delete.
-6. If you provided both files correctly, the app should migrate the data to the newer (Which should have been the auto generated one from step 2)
-7. Move the new database file back to the `/Database` directory of your application.
-8. Copy all old videos to the new /Videos directory (For docker instances, this step shouldn't be required)
-8. Migration complete. You should now see all of your old videos.
-
-
 ## Bugs, issues, questions and requests
 
-1. If you encounter any bug please check the [issues](https://github.com/Azmekk/Magic-Number-Analyzer/issues) page to see if it has been reported and/or fixed. 
+1. If you encounter any bug please check the [issues](https://github.com/Azmekk/yt-dlp-web-app/issues) page to see if it has been reported and/or fixed. 
 2. If you determine that it hasn't feel free to open one.
 3. If you would like to request a feature, feel free to open an issue, however I cannot promise it will be implemented.
 
