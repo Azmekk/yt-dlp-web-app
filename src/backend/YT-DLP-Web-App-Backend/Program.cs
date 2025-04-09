@@ -112,6 +112,11 @@ namespace YT_DLP_Web_App_Backend
             builder.Services.AddHostedService<EnqueueUnfinishedVideosService>();
         }
 
+        private static void AddRecurringJobs()
+        {
+            RecurringJob.AddOrUpdate<UpdatesService>("HourlyCheckForYtDlpUpdate", service => service.CheckForYtDlpUpdateAndUpdateIfNeeded(), Cron.Hourly);
+        }
+
         private static async Task MigrateDatabase(WebApplication app)
         {
             using var scope = app.Services.CreateScope();

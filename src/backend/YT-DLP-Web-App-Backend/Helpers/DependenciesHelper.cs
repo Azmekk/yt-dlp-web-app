@@ -6,22 +6,30 @@ namespace YT_DLP_Web_App_Backend.Helpers
     {
         const string DefaultYtDlpCommand = "yt-dlp";
         const string DefaultFfmpegCommand = "ffmpeg";
-
-        private static bool UseLocalExecutables { get; set; } = false;
-        public static string YtDlpPath { get; private set; } = DefaultYtDlpCommand;
-        public static string FfmpegPath { get; private set; } = DefaultFfmpegCommand;
-
-        public static bool DepsPresentInExeDir()
+        
+        public static string YtDlpPath { get; private set; } = Path.Join(AppDomain.CurrentDomain.BaseDirectory, DefaultYtDlpCommand) + GetOsExtension();
+        public static string FfmpegPath { get; private set; } = Path.Join(AppDomain.CurrentDomain.BaseDirectory, DefaultFfmpegCommand) + GetOsExtension();
+        
+        public static string GetOsExtension()
         {
-            YtDlpPath = Path.Join(AppDomain.CurrentDomain.BaseDirectory, DefaultYtDlpCommand);
-            FfmpegPath = Path.Join(AppDomain.CurrentDomain.BaseDirectory, DefaultFfmpegCommand);
-
             if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                YtDlpPath += ".exe";
-                FfmpegPath += ".exe";
+                return ".exe";
+            }
+            else if(RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                return "";
+            }
+            else if(RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                return "";
             }
 
+            throw new NotSupportedException("Unsupported OS");
+        }
+
+        public static bool ValidateDependencies()
+        {
             if(!File.Exists(YtDlpPath))
             {
                 return false;
@@ -35,80 +43,65 @@ namespace YT_DLP_Web_App_Backend.Helpers
             return true;
         }
 
-        public static bool DepsPresentOnPath()
+        public static async Task<bool> VerifyOrInstallDependenciesAsync()
         {
-            if(!IsOnPath(DefaultYtDlpCommand, out string ytDlpFoundPath))
-            {
-                return false;
-            }
-
-            if(!IsOnPath(DefaultFfmpegCommand, out string ffmpegFoundPath))
-            {
-                return false;
-            }
-
-
-            YtDlpPath = Path.Join(ytDlpFoundPath, DefaultYtDlpCommand);
-            FfmpegPath = Path.Join(ffmpegFoundPath, DefaultFfmpegCommand);
-
-            if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
-            {
-                YtDlpPath += ".exe";
-                FfmpegPath += ".exe";
-            }
-
-            return true;
-        }
-
-        public async static Task<bool> VerifyOrInstallDependenciesAsync()
-        {
-            var depsPresentLocally = DepsPresentInExeDir();
-            var depsPresentOnPath = DepsPresentOnPath();
+            var depsPresentLocally = ValidateDependencies();
 
             if(depsPresentLocally)
             {
                 return true;
             }
 
-            if(depsPresentOnPath)
-            {
-                return true;
-            }
-
             await YoutubeDLSharp.Utils.DownloadYtDlp(Path.GetDirectoryName(YtDlpPath));
             await YoutubeDLSharp.Utils.DownloadFFmpeg(Path.GetDirectoryName(FfmpegPath));
-
-            UseLocalExecutables = true;
+            
             return true;
         }
-
-        private static bool IsOnPath(string exeName, out string fullPath)
+        
+        public static async Task<bool> UpdateYtDlpAsync()
         {
-            fullPath = String.Empty;
-            string? paths = Environment.GetEnvironmentVariable("PATH");
-
-            if(string.IsNullOrEmpty(paths))
+            var result = false;
+            var newDownloadDirectory = Path.Join(Path.GetDirectoryName(YtDlpPath), "new-download");
+            
+            if(!Directory.Exists(newDownloadDirectory))
             {
-                return false;
+                Directory.CreateDirectory(newDownloadDirectory);
             }
-                
-
-            char pathSeparator = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? ';' : ':';
-
-            if(RuntimeInformation.IsOSPlatform(OSPlatform.Windows) && !exeName.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+            
+            await YoutubeDLSharp.Utils.DownloadYtDlp(newDownloadDirectory);
+            var newPath = FindYtDlpInPath(newDownloadDirectory);
+            
+            try
             {
-                exeName += ".exe";
+                File.Delete(YtDlpPath);
+                File.Move(newPath, YtDlpPath);
+                result = true;
             }
-
-            var matchingPath = paths.Split(pathSeparator).FirstOrDefault(path => File.Exists(Path.Combine(path, exeName)));
-
-            if(matchingPath == null)
+            catch (Exception e)
             {
-                return false;
+                Console.WriteLine("Failed to update yt-dlp: " + e);
+            }
+            
+            if (File.Exists(newPath))
+            {
+                File.Delete(newPath);
+                result = false;
+            }
+            
+            if(Directory.Exists(newDownloadDirectory))
+            {
+                Directory.Delete(newDownloadDirectory, true);
             }
 
-            fullPath = matchingPath;
-            return true;
+            return result;
+        }
+
+        private static string FindYtDlpInPath(string path)
+        {
+            var pathFiles = Directory.GetFiles(path);
+            var ytDlpFiles = pathFiles.Where(x => x.Contains("yt-dlp")).ToList();
+
+            return ytDlpFiles.FirstOrDefault() ?? string.Empty;
         }
     }
 }
