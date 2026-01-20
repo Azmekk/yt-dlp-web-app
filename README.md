@@ -27,6 +27,9 @@
 
 </div>
 
+# UPDATE: App support has stopped in favor of my new project [Vidra](https://github.com/Azmekk/Vidra)
+<br/><br/><br/><br/><br/><br/>
+
 ## Overview
 
 A web interface that leverages [YT-DLP](https://github.com/yt-dlp/yt-dlp)'s capabilities to make downloading and storing content user-friendly. It can be used as a standalone app that you run locally, or you can host it and use it on all of your devices. 
@@ -101,3 +104,4 @@ services:
 [Svelte-url]: https://svelte.dev/
 [TailwindCSS]: https://img.shields.io/badge/tailwindcss-%2338B2AC.svg?style=for-the-badge&logo=tailwind-css&logoColor=white
 [TailwindCSS-url]: https://tailwindcss.com/
+
